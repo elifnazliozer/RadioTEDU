@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-radio-dark: #09090b;   /*koyu gri*/   
   --color-radio-card: #18181b;   /*bi tık açık koyu gri*/   
@@ -7,9 +9,107 @@
 }
 
 html, body {
-  background-color: var(--color-radio-dark);
-  color: white;
   margin: 0;
   padding: 0;
   font-family: system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html.dark, html.dark body {
+  background-color: var(--color-radio-dark);
+  color: #ffffff;
+}
+
+html.light, html.light body {
+  background-color: #f8fafc;
+  color: #09090b;
+}
+
+/* RadioTEDU Vibe - Özel İnce Koyu Kaydırma Çubuğu (Scrollbar) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #27272a transparent;
+}
+
+html.light * {
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+
+html.light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease-in-out;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #dc2626;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+}
+
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0;
+  height: 0;
+}
+
+/* Özel Akış Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #e50914;
+}
+
+/* Ekolayzır / Frekans Animasyonları */
+@keyframes eqBounce {
+  0%, 100% { height: 4px; }
+  50% { height: 22px; }
+}
+
+.animate-eq-1 { animation: eqBounce 1.1s ease-in-out infinite; }
+.animate-eq-2 { animation: eqBounce 0.8s ease-in-out infinite 0.2s; }
+.animate-eq-3 { animation: eqBounce 1.4s ease-in-out infinite 0.4s; }
+.animate-eq-4 { animation: eqBounce 0.9s ease-in-out infinite 0.1s; }
+.animate-eq-5 { animation: eqBounce 1.2s ease-in-out infinite 0.3s; }
+.animate-eq-6 { animation: eqBounce 0.7s ease-in-out infinite 0.5s; }
+.animate-eq-7 { animation: eqBounce 1.3s ease-in-out infinite 0.25s; }
+.animate-eq-8 { animation: eqBounce 1.0s ease-in-out infinite 0.35s; }
+
+/* Kampüs Duvarı Canlı Ticker Animasyonu */
+@keyframes tickerSlide {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+.animate-ticker {
+  display: flex;
+  width: max-content;
+  animation: tickerSlide 40s linear infinite;
+  will-change: transform;
+}
+
+.animate-ticker:hover {
+  animation-play-state: paused;
 }

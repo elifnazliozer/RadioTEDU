@@ -1,6 +1,5 @@
 import React, { createContext, useState } from 'react';
 
-// Radyonun global durumunu tutacak beyin burası
 export const AudioContext = createContext();
 
 export const AudioProvider = ({ children }) => {
@@ -10,10 +9,8 @@ export const AudioProvider = ({ children }) => {
     artist: "RadioTEDU Canlı"
   });
 
-  // Oynat/Durdur işlevi
-  const togglePlay = () => {
+  const togglePlay = () => {  // oynat ve durdru işlemi
     setIsPlaying(!isPlaying);
-    // İleride buraya HTML5 Audio elementinin .play() ve .pause() metodlarını ekleyeceğiz
   };
 
   return (
