@@ -3,12 +3,20 @@ from flask_cors import CORS
 import google.generativeai as genai
 import json
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
-# key ile birlikte gemini API yapılandırması
-genai.configure(api_key="AQ.Ab8RN6Lt4wpy3ihWD-eIcNN2szfLMroG4qbdyNIeCXDNdULO8Q")
+# Environment Variable'dan API key alma
+api_key = os.environ.get("GEMINI_API_KEY")
+if api_key:
+    genai.configure(api_key=api_key)
+else:
+    print("UYARI: GEMINI_API_KEY çevre değişkeni (.env dosyası) bulunamadı!")
+
 
 generation_config = {
     "temperature": 0.7,
