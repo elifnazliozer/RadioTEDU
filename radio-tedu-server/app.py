@@ -5,22 +5,26 @@ import json
 import os
 from dotenv import load_dotenv
 
+# .env dosyasını hem çalışılan dizinden hem de app.py'nin bulunduğu klasörden yükle
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path=env_path)
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
 # Environment Variable'dan API key alma
-api_key = os.environ.get("GEMINI_API_KEY")
+api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
 if api_key:
     genai.configure(api_key=api_key)
+    print("Gemini API Key basariyla yuklendi.")
 else:
-    print("UYARI: GEMINI_API_KEY çevre değişkeni (.env dosyası) bulunamadı!")
+    print("UYARI: GEMINI_API_KEY cevre degiskeni (.env dosyasi) bulunamadi!")
 
 
 generation_config = {
     "temperature": 0.7,
-    "max_output_tokens": 120,
+    "max_output_tokens": 500,
     "response_mime_type": "application/json",
 }
 
@@ -277,17 +281,26 @@ def ai_director():
         except Exception as model_err:
             print("Primary model error, trying fallback:", model_err)
             fallback_model = genai.GenerativeModel(
-                model_name="gemini-flash-latest",
+                model_name="gemini-3.5-flash",
                 generation_config=generation_config,
                 system_instruction=AI_SYSTEM_INSTRUCTION
             )
             response = fallback_model.generate_content(prompt)
 
-        result = json.loads(response.text)
+        raw_text = response.text.strip()
+        
+        # Regex ile JSON objesini çıkar ({ ... })
+        match = re.search(r'\{.*\}', raw_text, re.DOTALL)
+        if match:
+            json_str = match.group(0)
+            result = json.loads(json_str)
+        else:
+            result = json.loads(raw_text)
+
         return jsonify(result)
 
     except Exception as e:
-        print("Hata:", str(e))
+        print("Hata:", str(e).encode("ascii", errors="ignore").decode("ascii"))
         error_msg = (
             "The AI DJ experienced a brief static burst, but the broadcast continues!"
             if lang == 'en' else
