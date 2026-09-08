@@ -15,6 +15,13 @@ export const translations = {
     heroDesc: "Ders arasında, kütüphanede veya gecenin tam ortasında: 6 farklı radyo kanalı ve RadioTEDU stüdyolarından çıkan özgün podcastler burada.",
     heroListenLive: "Canlı Dinle",
     heroPause: "Duraklat",
+    heroFrequency: "108.0 FM · STEREO HD",
+    heroQuality: "320 KBPS HD",
+    heroOnAirNow: "CANLI STÜDYO YAYINI",
+    heroQuickStations: "Radyo Frekansları",
+    heroCampusBadge: "ANKARA · TEDÜ KAMPÜSÜ",
+    heroVintageTube: "CANLI YAYINDA",
+    heroAnalogDial: "ANALOG KADRAN",
     
     // Tabs
     tabAll: "Tüm İçerikler",
@@ -116,6 +123,13 @@ export const translations = {
     heroDesc: "Between lectures, in the library, or in the dead of night: 6 live radio channels and original podcasts straight from RadioTEDU studios.",
     heroListenLive: "Listen Live",
     heroPause: "Pause",
+    heroFrequency: "108.0 FM · STEREO HD",
+    heroQuality: "320 KBPS HD",
+    heroOnAirNow: "LIVE STUDIO BROADCAST",
+    heroQuickStations: "Radio Frequencies",
+    heroCampusBadge: "ANKARA · TEDU CAMPUS",
+    heroVintageTube: "LIVE ON AIR",
+    heroAnalogDial: "ANALOG DIAL",
     
     // Tabs
     tabAll: "All Content",

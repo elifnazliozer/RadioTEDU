@@ -1,20 +1,17 @@
-# Environment Variables (ASLA GitHub'a PUSH ETMEYİN!)
+# Environment variables
 .env
-*.env
-!.env.example
+.env.local
+.env.*.local
 
-# Python
+# Python / Server
 __pycache__/
 *.py[cod]
 *$py.class
 venv/
 .venv/
-env/
 
-# Node / Web Frontend
+# Node / Client
 node_modules/
 dist/
 build/
-.ds_store
-.vscode/
-.idea/
+.DS_Store

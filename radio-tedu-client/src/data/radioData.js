@@ -6,6 +6,7 @@ export const STATIONS = [
     badge: "CANLI",
     description: "TED Üniversitesi'nin 7/24 kesintisiz canlı müzik ve yayın akışı.",
     src: "https://stream.radiotedu.com/radio",
+    fallbackSrc: "https://stream.zeno.fm/f3wvbbqmdg8uv",
     artwork: "https://radiotedu.com/wp-content/themes/radiotedu/assets/images/radiotedu-logo.png",
     color: "from-red-600 to-rose-950"
   },
@@ -16,6 +17,7 @@ export const STATIONS = [
     badge: "RADYO",
     description: "Klasik müziğin zamansız eserleri.",
     src: "https://stream.radiotedu.com/classic",
+    fallbackSrc: "https://stream.srg-ssr.ch/m/rsc_fr/mp3_128",
     artwork: "https://radiotedu.com/wp-content/themes/radiotedu/assets/images/stations/radiotedu-classic.jpg",
     color: "from-amber-700 to-stone-950"
   },
@@ -26,6 +28,7 @@ export const STATIONS = [
     badge: "RADYO",
     description: "Caz klasiklerinden yeni seslere.",
     src: "https://stream.radiotedu.com/cazz",
+    fallbackSrc: "https://icecast.radiofrance.fr/francemusiquejazz-midfi.mp3",
     artwork: "https://radiotedu.com/wp-content/themes/radiotedu/assets/images/stations/radiotedu-jazz.jpg",
     color: "from-blue-700 to-indigo-950"
   },
@@ -36,6 +39,7 @@ export const STATIONS = [
     badge: "RADYO",
     description: "Derslere ve sakin anlara lo-fi ritimler.",
     src: "https://stream.radiotedu.com/lofi",
+    fallbackSrc: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3",
     artwork: "https://radiotedu.com/wp-content/themes/radiotedu/assets/images/stations/radiotedu-lofi.jpg",
     color: "from-emerald-700 to-teal-950"
   },
@@ -46,6 +50,7 @@ export const STATIONS = [
     badge: "RADYO",
     description: "Rock klasiklerinden alternatif seslere.",
     src: "https://stream.radiotedu.com/rock",
+    fallbackSrc: "https://stream.rockantenne.de/rockantenne/stream/mp3",
     artwork: "https://radiotedu.com/wp-content/themes/radiotedu/assets/images/stations/radiotedu-rock.jpg",
     color: "from-purple-800 to-gray-950"
   },
@@ -56,6 +61,7 @@ export const STATIONS = [
     badge: "RADYO",
     description: "Güne tempo katan yüksek enerjili seçkiler.",
     src: "https://stream.radiotedu.com/energize",
+    fallbackSrc: "https://stream.dancewave.online/dance.mp3",
     artwork: "https://radiotedu.com/wp-content/themes/radiotedu/assets/images/stations/radiotedu-energize.jpg",
     color: "from-yellow-600 to-orange-950"
   }

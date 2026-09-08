@@ -53,11 +53,11 @@ export default function ScheduleWidget() {
   }
 
   return (
-    <div className="p-4 sm:p-5 border-b border-zinc-200 dark:border-gray-800/90 flex flex-col bg-white dark:bg-[#0c0c0f] text-zinc-900 dark:text-white shrink-0 transition-colors duration-300">
+    <div className="p-4 sm:p-5 border-b border-stone-200 dark:border-stone-800 flex flex-col bg-[#fdfbf7] dark:bg-[#120e0c] text-stone-900 dark:text-stone-100 shrink-0 transition-colors duration-300">
       {/* Başlık ve Gün Seçici */}
       <div className="flex items-center justify-between mb-3 shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-600 dark:text-red-500 shadow-[0_0_10px_rgba(229,9,20,0.2)] shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-700 dark:text-red-400 shadow-sm shrink-0">
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
               <line x1="16" x2="16" y1="2" y2="6"/>
@@ -67,23 +67,23 @@ export default function ScheduleWidget() {
             </svg>
           </div>
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-white">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-stone-900 dark:text-stone-100 font-mono">
               {t('scheduleTitle')}
             </h3>
-            <span className="text-[10px] text-zinc-500 font-mono">
-              Europe/Ankara · 24/7
+            <span className="text-[10px] text-red-700 dark:text-red-400 font-mono">
+              Europe/Ankara · 24/7 ANALOG
             </span>
           </div>
         </div>
 
         {/* Sekmeler */}
-        <div className="flex items-center bg-zinc-100 dark:bg-zinc-900/90 p-0.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-[10px] font-semibold">
+        <div className="flex items-center bg-stone-200/80 dark:bg-[#1a1614] p-0.5 rounded-lg border border-stone-300 dark:border-stone-800 text-[10px] font-semibold font-mono">
           <button
             onClick={() => setSelectedTab('today')}
             className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
               selectedTab === 'today'
-                ? 'bg-red-600 text-white shadow-sm'
-                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                ? 'bg-red-700 dark:bg-red-600 text-white shadow-sm'
+                : 'text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
             }`}
           >
             {t('today')}
@@ -92,8 +92,8 @@ export default function ScheduleWidget() {
             onClick={() => setSelectedTab('weekday')}
             className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
               selectedTab === 'weekday'
-                ? 'bg-red-600 text-white shadow-sm'
-                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                ? 'bg-red-700 dark:bg-red-600 text-white shadow-sm'
+                : 'text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
             }`}
           >
             {t('weekdays')}
@@ -102,8 +102,8 @@ export default function ScheduleWidget() {
             onClick={() => setSelectedTab('weekend')}
             className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
               selectedTab === 'weekend'
-                ? 'bg-red-600 text-white shadow-sm'
-                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                ? 'bg-red-700 dark:bg-red-600 text-white shadow-sm'
+                : 'text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
             }`}
           >
             {t('weekends')}
@@ -113,37 +113,37 @@ export default function ScheduleWidget() {
 
       {/* Şu An Yayında Olan Program Vitrini (Featured Card) */}
       {currentProgram && (
-        <div className="bg-gradient-to-br from-red-50 via-zinc-50 to-white dark:from-red-950/40 dark:via-zinc-900/90 dark:to-zinc-950 p-3 rounded-xl border border-red-200/80 dark:border-red-900/40 mb-3 shadow-md dark:shadow-lg shrink-0 transition-colors duration-300">
+        <div className="bg-stone-100/90 dark:bg-[#1c1815] p-3 rounded-xl border border-stone-300 dark:border-stone-800 mb-3 shadow-md dark:shadow-lg shrink-0 transition-colors duration-300">
           <div className="flex items-center justify-between mb-1">
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/15 dark:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/20 text-red-800 dark:text-red-300 border border-red-600/30 font-mono">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>
               {t('activeShow')}
             </span>
-            <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono font-medium">
+            <span className="text-[10px] text-stone-600 dark:text-stone-400 font-mono font-medium">
               {currentProgram.timeStr}
             </span>
           </div>
 
-          <h4 className="font-bold text-zinc-900 dark:text-white text-sm tracking-tight flex items-center justify-between">
+          <h4 className="font-bold text-stone-900 dark:text-stone-100 text-sm tracking-tight flex items-center justify-between font-serif">
             <span>{currentProgram.title}</span>
-            <span className="text-[10px] text-red-600 dark:text-red-400 font-normal bg-red-100/80 dark:bg-red-950/60 px-2 py-0.5 rounded-md border border-red-200 dark:border-red-900/30">
+            <span className="text-[10px] text-red-700 dark:text-red-400 font-normal font-mono bg-red-100 dark:bg-red-950/60 px-2 py-0.5 rounded-md border border-stone-300 dark:border-stone-800">
               {currentProgram.genre}
             </span>
           </h4>
 
-          <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-1 leading-snug line-clamp-1">
+          <p className="text-[11px] text-stone-700 dark:text-stone-300 mt-1 leading-snug line-clamp-1">
             {currentProgram.desc}
           </p>
 
           {/* Canlı İlerleme Çubuğu */}
           <div className="mt-2.5">
-            <div className="flex items-center justify-between text-[9px] text-zinc-500 mb-1">
+            <div className="flex items-center justify-between text-[9px] text-stone-500 dark:text-stone-400 mb-1 font-mono">
               <span>{t('broadcastProgress')}</span>
               <span>%{progressPercent}</span>
             </div>
-            <div className="w-full h-1 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+            <div className="w-full h-1.5 bg-stone-200 dark:bg-stone-900 rounded-full overflow-hidden border border-stone-300 dark:border-stone-800">
               <div
-                className="h-full bg-gradient-to-r from-red-600 to-rose-400 rounded-full transition-all duration-500"
+                className="h-full bg-gradient-to-r from-red-700 to-red-500 rounded-full transition-all duration-500"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
@@ -153,9 +153,9 @@ export default function ScheduleWidget() {
 
       {/* Günün Tüm Akışı (Kaydırılabilir Liste) */}
       <div className="space-y-1.5 pr-1 max-h-48 overflow-y-auto custom-scrollbar">
-        <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1 flex items-center justify-between sticky top-0 bg-white dark:bg-[#0c0c0f] py-0.5 z-10 transition-colors">
+        <div className="text-[10px] font-bold text-red-700 dark:text-red-400 uppercase tracking-wider mb-1 flex items-center justify-between sticky top-0 bg-[#fdfbf7] dark:bg-[#120e0c] py-0.5 z-10 font-mono transition-colors">
           <span>{t('dailyPrograms')}</span>
-          <span className="text-[9px] lowercase font-normal text-zinc-500 dark:text-zinc-600">{t('clickForDetails')}</span>
+          <span className="text-[9px] lowercase font-normal text-stone-500 dark:text-stone-400">{t('clickForDetails')}</span>
         </div>
 
         {activeList.map((item) => {
@@ -168,8 +168,8 @@ export default function ScheduleWidget() {
               onClick={() => setExpandedId(isExpanded ? null : item.id)}
               className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
                 isCurrent
-                  ? 'bg-red-50/80 dark:bg-zinc-900/90 border-red-400/80 dark:border-red-600/60 shadow-sm'
-                  : 'bg-zinc-50 dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800/70 hover:bg-zinc-100 dark:hover:bg-zinc-850 hover:border-zinc-300 dark:hover:border-zinc-700'
+                  ? 'bg-red-50 dark:bg-red-950/30 border-red-500/60 shadow-sm'
+                  : 'bg-stone-100/60 dark:bg-[#181513]/60 border-stone-200 dark:border-stone-800 hover:bg-stone-200/60 dark:hover:bg-[#201c19]'
               }`}
             >
               <div className="flex items-center justify-between gap-2">

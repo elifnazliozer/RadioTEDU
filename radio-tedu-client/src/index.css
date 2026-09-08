@@ -3,9 +3,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-radio-dark: #09090b;   /*koyu gri*/   
-  --color-radio-card: #18181b;   /*bi tık açık koyu gri*/   
-  --color-radio-accent: #E50914; /*canlı kırmızı tonu*/  
+  --color-radio-dark: #120e0c;   /* Vintage Koyu Maun Ahşap */   
+  --color-radio-card: #1c1714;   /* Koyu Ahşap Amfi Kartı */   
+  --color-radio-accent: #d97706; /* Sıcak Kehribar / Amber */  
 }
 
 html, body {
@@ -18,12 +18,12 @@ html, body {
 
 html.dark, html.dark body {
   background-color: var(--color-radio-dark);
-  color: #ffffff;
+  color: #fef3c7;
 }
 
 html.light, html.light body {
-  background-color: #f8fafc;
-  color: #09090b;
+  background-color: #f7f3ec;
+  color: #261c16;
 }
 
 /* RadioTEDU Vibe - Özel İnce Koyu Kaydırma Çubuğu (Scrollbar) */
@@ -112,4 +112,49 @@ html.light ::-webkit-scrollbar-track {
 
 .animate-ticker:hover {
   animation-play-state: paused;
+}
+
+/* Native View Transition Yönlü Tema Geçişi (Ultra-Smooth Hardware Accelerated) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+  will-change: transform, clip-path;
+  transform: translateZ(0);
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 2;
+}
+
+/* Dark -> Light: Soldan Sağa (LTR) Seri ve Yağ Gibi Açılma */
+html[data-theme-direction="ltr"]::view-transition-new(root) {
+  animation: revealLTR 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Light -> Dark: Sağdan Sola (RTL) Seri ve Yağ Gibi Açılma */
+html[data-theme-direction="rtl"]::view-transition-new(root) {
+  animation: revealRTL 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes revealLTR {
+  0% {
+    clip-path: inset(0 100% 0 0);
+  }
+  100% {
+    clip-path: inset(0 0% 0 0);
+  }
+}
+
+@keyframes revealRTL {
+  0% {
+    clip-path: inset(0 0 0 100%);
+  }
+  100% {
+    clip-path: inset(0 0 0 0%);
+  }
 }

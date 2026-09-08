@@ -11,7 +11,10 @@ load_dotenv(dotenv_path=env_path)
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+
+# Production vs Development CORS yapılandırması
+ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "*").split(",")
+CORS(app, resources={r"/api/*": {"origins": ALLOWED_ORIGINS}})
 
 # Environment Variable'dan API key alma
 api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
@@ -115,9 +118,37 @@ def clean_search_term(text):
     cleaned = re.sub(r'[\(\[][^\)\]]*[\)\]]', '', text)
     # feat. / ft. ibarelerini temizle
     cleaned = re.sub(r'\b(feat|ft)\.?\s+.*$', '', cleaned, flags=re.I)
-    # Fazla noktalama işaretlerini ve boşlukları sadeleştir
-    cleaned = re.sub(r'[\-_/|]+', ' ', cleaned)
     return ' '.join(cleaned.split()).strip()
+
+def select_best_itunes_result(results, clean_song, clean_artist):
+    if not results:
+        return None
+
+    def score(r):
+        track_name = (r.get('trackName') or '').lower()
+        artist_name = (r.get('artistName') or '').lower()
+        collection_name = (r.get('collectionName') or '').lower()
+
+        s = 0
+        if clean_song and clean_song.lower() == track_name:
+            s += 50
+        elif clean_song and clean_song.lower() in track_name:
+            s += 30
+
+        if clean_artist and (clean_artist.lower() in artist_name or artist_name in clean_artist.lower()):
+            s += 40
+
+        # Film müziği (Soundtrack) veya karma albümleri orijinal albümün arkasına at
+        if 'soundtrack' in collection_name or 'various artists' in collection_name:
+            s -= 25
+
+        # Orijinal parça aranıyorsa remix/flip versiyonları düşür
+        if clean_song and ('remix' in track_name or 'flip' in track_name) and 'remix' not in clean_song.lower():
+            s -= 15
+
+        return s
+
+    return max(results, key=score)
 
 def get_artwork_and_palette(song, artist=""):
     if not song:
@@ -126,10 +157,9 @@ def get_artwork_and_palette(song, artist=""):
     if cache_key in artwork_cache:
         return artwork_cache[cache_key]
 
-    # Şarkı veya sanatçı adındaki gereksiz parantezleri ve ekleri temizleyip aramayı netleştir
     clean_song = clean_search_term(song)
     clean_artist = clean_search_term(artist)
-    term = f"{clean_artist} {clean_song}".strip() or song
+    term = f"{clean_artist} - {clean_song}".strip() if clean_artist and clean_song else (clean_song or song)
 
     # Önbellek boyut kontrolü (bellek şişmesini önle)
     if len(artwork_cache) > 250:
@@ -137,25 +167,27 @@ def get_artwork_and_palette(song, artist=""):
             artwork_cache.pop(old_k, None)
 
     try:
-        url = f"https://itunes.apple.com/search?term={urllib.parse.quote(term)}&entity=song&limit=1"
+        url = f"https://itunes.apple.com/search?term={urllib.parse.quote(term)}&entity=song&limit=8"
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
         with urllib.request.urlopen(req, timeout=2.5) as resp:
             data = json.loads(resp.read().decode('utf-8'))
+            results = data.get('results', [])
             
             # İlk arama sonuç vermezse sadece şarkı adıyla dene
-            if not data.get('results') and clean_song and clean_artist:
-                fallback_url = f"https://itunes.apple.com/search?term={urllib.parse.quote(clean_song)}&entity=song&limit=1"
+            if not results and clean_song and clean_artist:
+                fallback_url = f"https://itunes.apple.com/search?term={urllib.parse.quote(clean_song)}&entity=song&limit=8"
                 with urllib.request.urlopen(urllib.request.Request(fallback_url, headers={'User-Agent': 'Mozilla/5.0'}), timeout=2.0) as fresp:
                     data = json.loads(fresp.read().decode('utf-8'))
+                    results = data.get('results', [])
 
-            if data.get('results'):
-                r = data['results'][0]
-                art_hires = r.get('artworkUrl100', '').replace('100x100bb', '600x600bb')
-                art_thumb = r.get('artworkUrl100', '')
+            best_match = select_best_itunes_result(results, clean_song, clean_artist)
+            if best_match:
+                art_hires = best_match.get('artworkUrl100', '').replace('100x100bb', '600x600bb')
+                art_thumb = best_match.get('artworkUrl100', '')
                 
                 # Küçük görsel üzerinden mikrosaniyeler içinde renk paleti çıkar
                 palette = None
-                if Image is not None:
+                if Image is not None and art_thumb:
                     try:
                         with urllib.request.urlopen(urllib.request.Request(art_thumb, headers={'User-Agent': 'Mozilla/5.0'}), timeout=1.5) as aresp:
                             img = Image.open(io.BytesIO(aresp.read())).convert('RGB')
@@ -209,14 +241,13 @@ def now_playing():
     cache_key = station_id or stream_url
     if cache_key in now_playing_cache:
         cached = now_playing_cache[cache_key]
-        if now - cached["time"] < 10:  # 10 saniye önbellek
+        if now - cached["time"] < 3:  # 3 saniye ultra hızlı gerçek zamanlı önbellek
             return jsonify(cached["data"])
 
-    # 1. Öncelik: Doğrudan Icecast canlı akış metaverisi
-    meta = extract_metadata_from_stream(stream_url)
+    meta = None
 
-    # 2. İkincil Öncelik: RadioTEDU WordPress REST API
-    if not meta and station_id:
+    # 1. Öncelik: Doğrudan radiotedu.com Resmi WordPress REST API (radiotedu.com canlı verisi)
+    if station_id:
         try:
             api_url = f"https://radiotedu.com/wp-json/radiotedu/v1/stations/{station_id}/live"
             req = urllib.request.Request(api_url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"})
@@ -232,19 +263,24 @@ def now_playing():
         except Exception:
             pass
 
+    # 2. İkincil Öncelik: Doğrudan Icecast canlı yayın akış başlıkları (%100 anlık veri)
+    if not meta:
+        meta = extract_metadata_from_stream(stream_url)
+
     response_data = meta if meta else {
         "artist": "",
         "song": None,
         "title": None
     }
 
-    # Eğer şarkı bilgisi varsa, albüm kapağını ve renk paletini bul
+    # Eğer şarkı bilgisi varsa, albüm kapağını ve renk paletini zenginleştir
     if response_data.get("song"):
         is_jingle = bool(re.search(r'^(tedu[_-]?\d*|jingle|radiotedu)$', response_data["song"], re.I))
         if not is_jingle:
             art_info = get_artwork_and_palette(response_data["song"], response_data.get("artist", ""))
             if art_info:
-                response_data["artwork"] = art_info.get("artwork")
+                if not response_data.get("artwork"):
+                    response_data["artwork"] = art_info.get("artwork")
                 response_data["palette"] = art_info.get("palette")
 
     now_playing_cache[cache_key] = {
@@ -258,8 +294,10 @@ def now_playing():
 def ai_director():
     try:
         data = request.get_json() or {}
-        user_mood = (data.get('mood') or '').strip()
+        user_mood = (data.get('mood') or '').strip()[:200]  # Maksimum 200 karakter sınırı (DoS & Prompt Injection koruması)
         lang = (data.get('lang') or 'tr').strip().lower()
+        if lang not in ['tr', 'en']:
+            lang = 'tr'
         
         if not user_mood:
             fallback_msg = "Please share your mood or activity with us!" if lang == 'en' else "Lütfen ruh halini bizimle paylaş!"
@@ -329,4 +367,6 @@ def serve_client(path):
     })
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    debug = os.environ.get("FLASK_DEBUG", "True").lower() in ["true", "1"]
+    app.run(host="0.0.0.0", port=port, debug=debug)

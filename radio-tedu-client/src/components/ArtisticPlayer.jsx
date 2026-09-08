@@ -226,20 +226,6 @@ export default function ArtisticPlayer() {
                 />
                 {isPlaying ? t('onAir') : t('standby')}
               </span>
-              {hasLiveSong && isPlaying && (
-                <span
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-white/25 dark:bg-black/40 backdrop-blur-md border border-white/25 dark:border-white/10 text-zinc-900 dark:text-white shadow-sm"
-                >
-                  <span
-                    className="w-1.5 h-1.5 rounded-full animate-ping"
-                    style={{ backgroundColor: activeAccent }}
-                  />
-                  {t('liveTrack')}
-                </span>
-              )}
-              <span className="text-[10px] text-zinc-700 dark:text-zinc-300 hidden lg:inline tracking-widest font-mono font-medium drop-shadow-sm">
-                {t('quality')}
-              </span>
             </div>
 
             <h4

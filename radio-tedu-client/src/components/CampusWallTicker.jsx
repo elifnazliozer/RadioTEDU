@@ -55,27 +55,27 @@ export default function CampusWallTicker({ onOpenShoutModal }) {
   return (
     <>
       {/* Kayan Bant Barı */}
-      <div className="w-full h-8 shrink-0 z-40 bg-zinc-100/95 dark:bg-[#09090d]/95 border-y border-zinc-300 dark:border-red-500/20 backdrop-blur-md flex items-center select-none overflow-hidden transition-colors duration-300 relative">
+      <div className="w-full h-8 shrink-0 z-40 bg-[#f3eee6] dark:bg-[#0e0b0a] border-y border-stone-300 dark:border-stone-800 backdrop-blur-md flex items-center select-none overflow-hidden transition-colors duration-300 relative">
         
         {/* Sol Kırmızı Rozet */}
-        <div className="bg-red-600 text-white font-black text-[10px] uppercase tracking-widest px-3 h-full flex items-center gap-1.5 shrink-0 shadow-md z-10">
-          <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+        <div className="bg-red-700 text-white font-black text-[10px] uppercase tracking-widest px-3 h-full flex items-center gap-1.5 shrink-0 shadow-md z-10 font-mono">
+          <span className="w-1.5 h-1.5 rounded-full bg-red-200 animate-ping"></span>
           <span>{t('wallBadge')}</span>
         </div>
 
         {/* Kayan Yazı Alanı */}
         <div className="flex-1 overflow-hidden relative">
-          <div className="animate-ticker flex items-center whitespace-nowrap py-1">
+          <div className="animate-ticker flex items-center whitespace-nowrap py-1 font-mono">
             {marqueeItems.map((item, idx) => (
               <div
                 key={`${item.id}-${idx}`}
-                className="inline-flex items-center gap-2 text-[11px] text-zinc-700 dark:text-zinc-300 px-6 cursor-default hover:text-zinc-900 dark:hover:text-white transition-colors"
+                className="inline-flex items-center gap-2 text-[11px] text-stone-700 dark:text-stone-300 px-6 cursor-default transition-colors"
               >
                 <span className="text-xs">{item.type}</span>
-                <span className="font-semibold text-red-600 dark:text-red-400">[{item.author}]</span>
-                <span className="text-zinc-500 text-[10px]">({item.loc}):</span>
-                <span className="font-normal text-zinc-800 dark:text-zinc-200">"{item.text}"</span>
-                <span className="text-red-600/50 font-mono text-[10px] ml-4">//</span>
+                <span className="font-semibold text-red-700 dark:text-red-400">[{item.author}]</span>
+                <span className="text-stone-500 dark:text-stone-400 text-[10px]">({item.loc}):</span>
+                <span className="font-normal text-stone-800 dark:text-stone-100">"{item.text}"</span>
+                <span className="text-red-700/40 dark:text-red-500/40 font-mono text-[10px] ml-4">//</span>
               </div>
             ))}
           </div>
@@ -84,7 +84,7 @@ export default function CampusWallTicker({ onOpenShoutModal }) {
         {/* Sağ Buton: Not Bırak */}
         <button
           onClick={() => setIsModalOpen(true)}
-          className="h-full px-3 bg-white hover:bg-red-600 text-zinc-700 hover:text-white dark:bg-zinc-900 dark:hover:bg-red-600 dark:text-zinc-300 dark:hover:text-white text-[10px] font-bold tracking-wider uppercase transition-all flex items-center gap-1 shrink-0 border-l border-zinc-300 dark:border-zinc-800 z-10 cursor-pointer shadow-sm"
+          className="h-full px-3 bg-stone-200 hover:bg-red-700 text-stone-800 hover:text-white dark:bg-stone-800 dark:hover:bg-red-600 dark:text-stone-200 text-[10px] font-bold tracking-wider uppercase transition-all flex items-center gap-1 shrink-0 border-l border-stone-300 dark:border-stone-800 z-10 cursor-pointer shadow-sm font-mono"
           title={t('wallModalTitle')}
         >
           <span>+</span>
@@ -174,7 +174,7 @@ export default function CampusWallTicker({ onOpenShoutModal }) {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold shadow-lg shadow-red-600/30 cursor-pointer transition-all active:scale-95"
+                  className="px-5 py-2 rounded-xl bg-red-700 dark:bg-red-600 hover:bg-red-800 dark:hover:bg-red-500 text-white font-semibold shadow-md cursor-pointer transition-all active:scale-95"
                 >
                   {t('wallSubmit')}
                 </button>

@@ -4,9 +4,16 @@ RadioTEDU, üniversite radyosu yayınlarını ve yapay zeka destekli AI Müzik D
 
 ---
 
-## 🛠️ Kurulum ve Çalıştırma Rehberi
+## 📋 Ön Gereksinimler
 
-Projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımları sırasıyla uygulayabilirsiniz:
+Projenin sorunsuz çalışabilmesi için bilgisayarınızda aşağıdakilerin yüklü olması gerekir:
+- **Node.js**: (v18.0 veya üzeri) -> [nodejs.org](https://nodejs.org/)
+- **Python**: (v3.9 veya üzeri) -> [python.org](https://www.python.org/)
+- **Git**: [git-scm.com](https://git-scm.com/)
+
+---
+
+## 🛠️ Adım Adım Kurulum Rehberi
 
 ### 1. Depoyu Klonlayın
 ```bash
@@ -23,18 +30,26 @@ Backend servisi Python ve Flask ile geliştirilmiştir.
 ```bash
 cd radio-tedu-server
 
-# Bağımlılıkları yükleyin
+# (Opsiyonel ama Tavsiye Edilen) Python Sanal Ortamı (venv) Oluşturun
+python -m venv venv
+
+# Sanal Ortamı Aktifleştirin
+# Windows (PowerShell):
+.\venv\Scripts\activate
+# macOS / Linux:
+source venv/bin/activate
+
+# Bağımlılıkları Yükleyin
 pip install -r requirements.txt
 
-# Environment Variables (.env) Dosyasını Oluşturun
-# .env.example dosyasının bir kopyasını oluşturup adını .env yapın
+# Çevre Değişkenleri (.env) Dosyasını Oluşturun
 # Windows (PowerShell):
 copy .env.example .env
 # Linux / macOS:
 cp .env.example .env
 ```
 
-📌 **Önemli (API Key Ekleme):**
+📌 **Önemli (API Anahtarı Ekleme):**
 `.env` dosyasını bir metin düzenleyici ile açın ve [Google AI Studio](https://aistudio.google.com/) üzerinden ücretsiz alacağınız kendi Gemini API anahtarınızı ekleyin:
 ```env
 GEMINI_API_KEY=kendi_gemini_api_anahtariniz
@@ -50,9 +65,9 @@ python app.py
 
 ### 3. Frontend (Arayüz) Kurulumu
 
-Frontend React + Vite ile geliştirilmiştir.
+Frontend React + Vite + Tailwind CSS ile geliştirilmiştir.
 
-Yeni bir terminal penceresinde:
+Yeni bir terminal penceresinde projenin kök dizinine gelin ve:
 ```bash
 cd radio-tedu-client
 
@@ -62,7 +77,12 @@ npm install
 # Geliştirici sunucusunu başlatın
 npm run dev
 ```
-*(Arayüz varsayılan olarak `http://localhost:5173` adresinde çalışacaktır.)*
+
+---
+
+### 4. Uygulamaya Erişin
+Arayüz sunucusu başladıktan sonra tarayıcınızda aşağıdaki adrese gidin:
+👉 **`http://localhost:5173`**
 
 ---
 

@@ -24,7 +24,22 @@ export function ThemeProvider({ children }) {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+    const isCurrentDark = theme === 'dark';
+    const nextTheme = isCurrentDark ? 'light' : 'dark';
+    // Dark -> Light: Soldan Sağa (ltr)
+    // Light -> Dark: Sağdan Sola (rtl)
+    const direction = isCurrentDark ? 'ltr' : 'rtl';
+
+    document.documentElement.setAttribute('data-theme-direction', direction);
+
+    // Eğer tarayıcı View Transitions API destekliyorsa gerçek sayfa elemanları üzerinde yönlü geçiş yap
+    if (document.startViewTransition) {
+      document.startViewTransition(() => {
+        setTheme(nextTheme);
+      });
+    } else {
+      setTheme(nextTheme);
+    }
   };
 
   const isDark = theme === 'dark';
