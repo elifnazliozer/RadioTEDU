@@ -41,7 +41,7 @@ AI_SYSTEM_INSTRUCTION = (
 )
 
 model = genai.GenerativeModel(
-    model_name="gemini-3.5-flash-lite",
+    model_name="gemini-1.5-flash",
     generation_config=generation_config,
     system_instruction=AI_SYSTEM_INSTRUCTION
 )
@@ -279,7 +279,8 @@ def now_playing():
         if not is_jingle:
             art_info = get_artwork_and_palette(response_data["song"], response_data.get("artist", ""))
             if art_info:
-                if not response_data.get("artwork"):
+                # Orijinal albüm kapağını (iTunes/Apple Music) genel istasyon afişlerinin önüne al
+                if art_info.get("artwork"):
                     response_data["artwork"] = art_info.get("artwork")
                 response_data["palette"] = art_info.get("palette")
 
@@ -289,6 +290,111 @@ def now_playing():
     }
 
     return jsonify(response_data)
+
+lyrics_cache = {}
+
+def fetch_lyrics_from_sources(song, artist=""):
+    if not song:
+        return {"lyrics": None, "error": "No song specified"}
+        
+    clean_song = clean_search_term(song)
+    clean_artist = clean_search_term(artist)
+    
+    cache_key = f"{clean_artist}_{clean_song}".lower().strip()
+    if cache_key in lyrics_cache:
+        return lyrics_cache[cache_key]
+
+    if re.search(r'^(tedu[_-]?\d*|jingle|radiotedu)$', clean_song, re.I):
+        res = {"lyrics": None, "is_jingle": True, "message": "RadioTEDU Jingle / Tanıtım Yayını", "song": song, "artist": artist}
+        lyrics_cache[cache_key] = res
+        return res
+
+    # 1. LRCLIB Direct Get
+    if clean_artist and clean_song:
+        try:
+            url = f"https://lrclib.net/api/get?artist_name={urllib.parse.quote(clean_artist)}&track_name={urllib.parse.quote(clean_song)}"
+            req = urllib.request.Request(url, headers={'User-Agent': 'RadioTEDU-Client/1.0'})
+            with urllib.request.urlopen(req, timeout=3.0) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+                lyrics = data.get('plainLyrics') or data.get('syncedLyrics')
+                if lyrics:
+                    if data.get('syncedLyrics') and not data.get('plainLyrics'):
+                        lyrics = re.sub(r'\[\d+:\d+\.\d+\]\s*', '', lyrics)
+                    res = {"lyrics": lyrics.strip(), "source": "lrclib", "song": song, "artist": artist}
+                    lyrics_cache[cache_key] = res
+                    return res
+        except Exception:
+            pass
+
+    # 2. LRCLIB Search Query
+    query_term = f"{clean_artist} {clean_song}".strip() or clean_song or song
+    if query_term:
+        try:
+            url = f"https://lrclib.net/api/search?q={urllib.parse.quote(query_term)}"
+            req = urllib.request.Request(url, headers={'User-Agent': 'RadioTEDU-Client/1.0'})
+            with urllib.request.urlopen(req, timeout=3.0) as resp:
+                results = json.loads(resp.read().decode('utf-8'))
+                if results and isinstance(results, list):
+                    for item in results[:3]:
+                        lyrics = item.get('plainLyrics') or item.get('syncedLyrics')
+                        if lyrics:
+                            if item.get('syncedLyrics') and not item.get('plainLyrics'):
+                                lyrics = re.sub(r'\[\d+:\d+\.\d+\]\s*', '', lyrics)
+                            res = {
+                                "lyrics": lyrics.strip(),
+                                "source": "lrclib",
+                                "song": item.get('trackName', song),
+                                "artist": item.get('artistName', artist)
+                            }
+                            lyrics_cache[cache_key] = res
+                            return res
+        except Exception:
+            pass
+
+    # 3. Lyrics OVH API
+    if clean_artist and clean_song:
+        try:
+            url = f"https://api.lyrics.ovh/v1/{urllib.parse.quote(clean_artist)}/{urllib.parse.quote(clean_song)}"
+            req = urllib.request.Request(url, headers={'User-Agent': 'RadioTEDU-Client/1.0'})
+            with urllib.request.urlopen(req, timeout=3.0) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+                if data.get('lyrics'):
+                    res = {"lyrics": data['lyrics'].strip(), "source": "ovh", "song": song, "artist": artist}
+                    lyrics_cache[cache_key] = res
+                    return res
+        except Exception:
+            pass
+
+    # 4. Gemini AI fallback if configured
+    if model and api_key and (clean_song or song):
+        try:
+            prompt = (
+                f"Provide the official lyrics for the song '{artist} - {song}'. "
+                f"Output ONLY the plain lyrics text. "
+                f"If lyrics are unavailable or if the song is instrumental/jingle, reply with 'NOT_FOUND'."
+            )
+            response = model.generate_content(prompt)
+            txt = response.text.strip()
+            if txt and "NOT_FOUND" not in txt and len(txt) > 20:
+                res = {"lyrics": txt, "source": "ai", "song": song, "artist": artist}
+                lyrics_cache[cache_key] = res
+                return res
+        except Exception as e:
+            print("Gemini lyrics lookup error:", e)
+
+    res = {"lyrics": None, "error": "Lyrics not found", "song": song, "artist": artist}
+    lyrics_cache[cache_key] = res
+    return res
+
+@app.route('/api/lyrics', methods=['GET'])
+def lyrics():
+    song = request.args.get('song', '').strip()
+    artist = request.args.get('artist', '').strip()
+    if not song:
+        return jsonify({"lyrics": None, "error": "Song title missing"}), 400
+    res = fetch_lyrics_from_sources(song, artist)
+    return jsonify(res)
+
 
 @app.route('/api/ai-director', methods=['POST'])
 def ai_director():
@@ -319,7 +425,7 @@ def ai_director():
         except Exception as model_err:
             print("Primary model error, trying fallback:", model_err)
             fallback_model = genai.GenerativeModel(
-                model_name="gemini-3.5-flash",
+                model_name="gemini-1.5-pro",
                 generation_config=generation_config,
                 system_instruction=AI_SYSTEM_INSTRUCTION
             )

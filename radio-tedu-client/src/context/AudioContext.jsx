@@ -12,6 +12,7 @@ export const AudioProvider = ({ children }) => {
   const [nowPlaying, setNowPlaying] = useState(null);
 
   const audioRef = useRef(null);
+  const isChangingStreamRef = useRef(false);
 
   // Emniyet zamanlayıcısı: 4 saniyeden fazla yüklemede kalırsa ve çalmaya başlamadıysa yüklemeyi kapat
   useEffect(() => {
@@ -41,6 +42,7 @@ export const AudioProvider = ({ children }) => {
     };
 
     const handlePause = () => {
+      if (isChangingStreamRef.current) return;
       setIsLoading(false);
       setIsPlaying(false);
     };
@@ -73,7 +75,7 @@ export const AudioProvider = ({ children }) => {
       if (!currentTrack || !currentTrack.id) return;
       try {
         const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        const res = await fetch(`${backendUrl}/api/now-playing?station=${currentTrack.id}`);
+        const res = await fetch(`${backendUrl}/api/now-playing?station=${currentTrack.id}&t=${Date.now()}`);
         if (res.ok) {
           const data = await res.json();
           if (isMounted && data && (data.song || data.title)) {
@@ -104,17 +106,22 @@ export const AudioProvider = ({ children }) => {
     const audio = audioRef.current;
     if (!audio || !trackToPlay) return;
 
+    isChangingStreamRef.current = true;
     setIsLoading(true);
     setCurrentTrack(trackToPlay);
 
-    const primaryUrl = trackToPlay.src;
-    const fallbackUrl = trackToPlay.fallbackSrc || 'https://stream.zeno.fm/f3wvbbqmdg8uv';
+    const cb = `t=${Date.now()}`;
+    const addCb = (u) => (u.includes('?') ? `${u}&${cb}` : `${u}?${cb}`);
+
+    const primaryUrl = addCb(trackToPlay.src);
+    const fallbackUrl = trackToPlay.fallbackSrc
+      ? addCb(trackToPlay.fallbackSrc)
+      : 'https://stream.zeno.fm/f3wvbbqmdg8uv';
     const universalFallback = 'https://stream.zeno.fm/f3wvbbqmdg8uv';
 
     const tryStream = (url) => {
       return new Promise((resolve, reject) => {
         try {
-          audio.pause();
           audio.src = url;
           audio.load();
           const p = audio.play();
@@ -151,6 +158,8 @@ export const AudioProvider = ({ children }) => {
           setIsLoading(false);
         }
       }
+    } finally {
+      isChangingStreamRef.current = false;
     }
   };
 

@@ -158,3 +158,36 @@ html[data-theme-direction="rtl"]::view-transition-new(root) {
     clip-path: inset(0 0 0 0%);
   }
 }
+
+/* Şarkı Sözleri (Lyrics) Popup Yumuşak Açılış & Kapanış Animasyonları */
+@keyframes lyricsPopupIn {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes lyricsPopupOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.95);
+  }
+}
+
+.animate-popup-in {
+  animation: lyricsPopupIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: bottom right;
+}
+
+.animate-popup-out {
+  animation: lyricsPopupOut 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+  transform-origin: bottom right;
+}

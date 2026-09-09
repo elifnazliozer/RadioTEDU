@@ -17,13 +17,13 @@ function App() {
   }, [chatMessages, loading]);
 
   const handleAiSubmit = async (e) => {
-    // Enter tuşuna basıldıysa VEYA butona tıklandıysa çalışır
+    // enter'a basıldıysa ya da butona tıklandıysa çalışır
     if ((e.key === 'Enter' || e.type === 'click') && userInput.trim() !== '' && !loading) {
       const moodText = userInput.trim();
       setUserInput('');
       setLoading(true);
 
-      // Kullanıcı mesajını sohbet geçmişine ekle
+      // user'ın mesajını sohbet geçmişine ekler
       setChatMessages(prev => [...prev, { sender: 'user', text: moodText }]);
 
       try {

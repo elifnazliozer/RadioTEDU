@@ -107,7 +107,12 @@ export const translations = {
     volumeLevel: "Ses Seviyesi",
     ankara: "ANKARA",
     citySub: "TEDÜ Kampüsü",
-    defaultSubtitle: "TED Üniversitesi Radyosu"
+    defaultSubtitle: "TED Üniversitesi Radyosu",
+    lyricsTitle: "Şarkı Sözleri",
+    lyricsLoading: "Şarkı sözleri yükleniyor...",
+    lyricsNotFound: "Bu parça için söz bulunamadı veya enstrümantal yayın.",
+    lyricsButton: "Şarkı Sözleri (Lyrics)",
+    closeLyrics: "Sözleri Kapat"
   },
   en: {
     // Header
@@ -215,7 +220,12 @@ export const translations = {
     volumeLevel: "Volume",
     ankara: "ANKARA",
     citySub: "TEDU Campus",
-    defaultSubtitle: "TED University Radio"
+    defaultSubtitle: "TED University Radio",
+    lyricsTitle: "Song Lyrics",
+    lyricsLoading: "Loading lyrics...",
+    lyricsNotFound: "No lyrics found for this track or instrumental broadcast.",
+    lyricsButton: "Song Lyrics",
+    closeLyrics: "Close Lyrics"
   }
 };
 

@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect, useRef } from 'react';
 import { AudioContext } from '../context/AudioContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -92,6 +92,7 @@ export default function ArtisticPlayer() {
   
   const rgb = palette?.rgb || (currentTrack?.theme?.accent === '#e50914' ? [229, 9, 20] : [200, 30, 30]);
   const avgRgb = palette?.avg_rgb || rgb;
+  const isAccentLight = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000 > 150;
 
   // Çalan şarkı ve sanatçı hesaplaması
   const hasLiveSong = Boolean(nowPlaying?.song && nowPlaying.song !== currentTrack?.title);
@@ -105,6 +106,103 @@ export default function ArtisticPlayer() {
     }
     return currentTrack?.subtitle || currentTrack?.artist || t('defaultSubtitle');
   })();
+
+  // Şarkı Sözleri (Lyrics) durum ve ref yönetimi
+  const [showLyrics, setShowLyrics] = useState(false);
+  const [isClosingLyrics, setIsClosingLyrics] = useState(false);
+  const [lyricsData, setLyricsData] = useState(null);
+  const [loadingLyrics, setLoadingLyrics] = useState(false);
+  const [lyricsError, setLyricsError] = useState(null);
+
+  const lyricsRef = useRef(null);
+  const lyricsBtnRef = useRef(null);
+
+  const toggleLyrics = () => {
+    if (showLyrics && !isClosingLyrics) {
+      setIsClosingLyrics(true);
+      setTimeout(() => {
+        setShowLyrics(false);
+        setIsClosingLyrics(false);
+      }, 210);
+    } else if (!showLyrics) {
+      setIsClosingLyrics(false);
+      setShowLyrics(true);
+    }
+  };
+
+  const closeLyrics = () => {
+    if (showLyrics && !isClosingLyrics) {
+      setIsClosingLyrics(true);
+      setTimeout(() => {
+        setShowLyrics(false);
+        setIsClosingLyrics(false);
+      }, 210);
+    }
+  };
+
+  // Dışarıya tıklandığında pencerenin kapanması
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        showLyrics &&
+        !isClosingLyrics &&
+        lyricsRef.current &&
+        !lyricsRef.current.contains(event.target) &&
+        lyricsBtnRef.current &&
+        !lyricsBtnRef.current.contains(event.target)
+      ) {
+        closeLyrics();
+      }
+    };
+
+    if (showLyrics) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [showLyrics, isClosingLyrics]);
+
+  const fetchLyrics = async (song, artist) => {
+    if (!song) return;
+    setLoadingLyrics(true);
+    setLyricsError(null);
+    try {
+      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const cleanArtist = artist || nowPlaying?.artist || '';
+      const cleanSong = song || nowPlaying?.song || displayTitle;
+      const res = await fetch(`${backendUrl}/api/lyrics?song=${encodeURIComponent(cleanSong)}&artist=${encodeURIComponent(cleanArtist)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setLyricsData(data);
+        if (data.error || (!data.lyrics && !data.is_jingle)) {
+          setLyricsError(t('lyricsNotFound'));
+        }
+      } else {
+        setLyricsError(t('lyricsNotFound'));
+      }
+    } catch (err) {
+      console.error("Lyrics fetch error:", err);
+      setLyricsError(t('lyricsNotFound'));
+    } finally {
+      setLoadingLyrics(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showLyrics) {
+      const currentSong = nowPlaying?.song || (displayTitle !== 'RadioTEDU' ? displayTitle : null);
+      if (currentSong) {
+        fetchLyrics(currentSong, nowPlaying?.artist || '');
+      } else {
+        setLyricsData(null);
+        setLyricsError(t('lyricsNotFound'));
+      }
+    }
+  }, [showLyrics, nowPlaying?.song, displayTitle]);
 
   // Dinamik arka plan stili (Kapağın rengini tüm player çubuğuna giydirir)
   const dynamicBackgroundStyle = (() => {
@@ -132,7 +230,7 @@ export default function ArtisticPlayer() {
         background: dynamicBackgroundStyle,
         transition: 'background 0.8s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.8s ease'
       }}
-      className="h-24 shrink-0 w-full z-50 border-t border-white/20 dark:border-white/10 shadow-[0_-16px_48px_rgba(0,0,0,0.15)] dark:shadow-[0_-16px_48px_rgba(0,0,0,0.9)] backdrop-blur-3xl flex flex-col justify-between overflow-hidden transition-colors duration-300 relative"
+      className="h-24 shrink-0 w-full z-50 border-t border-white/20 dark:border-white/10 shadow-[0_-16px_48px_rgba(0,0,0,0.15)] dark:shadow-[0_-16px_48px_rgba(0,0,0,0.9)] backdrop-blur-3xl flex flex-col justify-between overflow-visible transition-colors duration-300 relative"
     >
       {/* 1. KATMAN: Albüm Kapağının Renklerini Arkaya Yayan Derin Bulanık Ortam Katmanı (Apple Music / Spotify Tarzı) */}
       {coverArtwork && (
@@ -356,7 +454,28 @@ export default function ArtisticPlayer() {
         </div>
 
         {/* SAĞ: Ses Kontrolü & Stüdyo Detayları (Sağ Kenara Hizalı) */}
-        <div className="flex items-center justify-end gap-5 min-w-0 justify-self-end">
+        <div className="flex items-center justify-end gap-3 sm:gap-4 min-w-0 justify-self-end relative">
+          
+          {/* Şarkı Sözleri (Lyrics) İkon Butonu - 39.93°N / 32.85°E Solunda */}
+          <button
+            ref={lyricsBtnRef}
+            onClick={toggleLyrics}
+            className={`p-1.5 rounded-lg text-zinc-800 hover:text-black dark:text-zinc-100 dark:hover:text-white bg-transparent border-0 transition-all duration-200 cursor-pointer flex items-center justify-center hover:scale-110 active:scale-90 drop-shadow-sm ${
+              showLyrics ? 'opacity-100 scale-110' : 'opacity-80 hover:opacity-100'
+            }`}
+            title={t('lyricsButton')}
+            aria-label={t('lyricsButton')}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="w-5 h-5 transition-transform duration-300"
+            >
+              <path fillRule="evenodd" d="M12 2.25c-2.485 0-4.5 2.015-4.5 4.5v5.25c0 2.485 2.015 4.5 4.5 4.5s4.5-2.015 4.5-4.5V6.75c0-2.485-2.015-4.5-4.5-4.5zM6 11.25a.75.75 0 0 1 .75.75 5.25 5.25 0 0 0 10.5 0 .75.75 0 0 1 1.5 0 6.75 6.75 0 0 1-6 6.709v2.541h2.25a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5H11.25v-2.541a6.75 6.75 0 0 1-6-6.709.75.75 0 0 1 .75-.75z" clipRule="evenodd" />
+            </svg>
+          </button>
+
           {/* Stüdyo Koordinat / Canlı Frekans Damgası */}
           <div className="text-right hidden sm:block">
             <span className="text-[10px] text-zinc-700 dark:text-zinc-400 tracking-wider block font-mono font-medium drop-shadow-sm">{t('ankara')}</span>
@@ -403,6 +522,91 @@ export default function ArtisticPlayer() {
         </div>
 
       </div>
+
+      {/* ŞARKISÖZLERİ (LYRICS) AÇILIR PENCERESİ (POPUP) */}
+      {(showLyrics || isClosingLyrics) && (
+        <div
+          ref={lyricsRef}
+          className={`absolute right-4 sm:right-16 bottom-28 w-80 sm:w-96 max-h-[26rem] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-4 sm:p-5 z-50 flex flex-col ${
+            isClosingLyrics ? 'animate-popup-out' : 'animate-popup-in'
+          }`}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between pb-3 border-b border-black/10 dark:border-white/10 mb-3 shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 shadow-sm transition-colors"
+                style={{
+                  backgroundColor: activeAccent,
+                  color: isAccentLight ? '#09090b' : '#ffffff'
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M12 2.25c-2.485 0-4.5 2.015-4.5 4.5v5.25c0 2.485 2.015 4.5 4.5 4.5s4.5-2.015 4.5-4.5V6.75c0-2.485-2.015-4.5-4.5-4.5zM6 11.25a.75.75 0 0 1 .75.75 5.25 5.25 0 0 0 10.5 0 .75.75 0 0 1 1.5 0 6.75 6.75 0 0 1-6 6.709v2.541h2.25a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5H11.25v-2.541a6.75 6.75 0 0 1-6-6.709.75.75 0 0 1 .75-.75z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-[10px] font-bold tracking-widest text-zinc-500 dark:text-zinc-400 uppercase font-mono">
+                  {t('lyricsTitle')}
+                </h4>
+                <p className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate">
+                  {nowPlaying?.song || displayTitle}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={closeLyrics}
+              className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-500 hover:text-black dark:text-zinc-400 dark:hover:text-white bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20 transition-colors cursor-pointer shrink-0 ml-2"
+              title={t('closeLyrics')}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Content Body */}
+          <div className="flex-1 overflow-y-auto max-h-60 pr-2 text-xs sm:text-sm leading-relaxed scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700 select-text">
+            {loadingLyrics ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-3 text-zinc-500 dark:text-zinc-400">
+                <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${activeAccent} transparent ${activeAccent} ${activeAccent}` }} />
+                <span className="text-xs font-medium">{t('lyricsLoading')}</span>
+              </div>
+            ) : lyricsData?.is_jingle ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center text-zinc-500 dark:text-zinc-400 gap-2">
+                <span className="text-2xl">📻</span>
+                <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">{lyricsData.message}</p>
+              </div>
+            ) : lyricsData?.lyrics ? (
+              <div className="whitespace-pre-line text-zinc-800 dark:text-zinc-200 text-xs sm:text-sm font-sans tracking-wide font-medium">
+                {lyricsData.lyrics}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center text-zinc-500 dark:text-zinc-400 gap-2">
+                <span className="text-2xl">🎵</span>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">{lyricsError || t('lyricsNotFound')}</p>
+                {nowPlaying?.song && (
+                  <button
+                    onClick={() => fetchLyrics(nowPlaying.song, nowPlaying.artist)}
+                    className="mt-2 text-xs px-3 py-1.5 rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20 transition-colors text-zinc-800 dark:text-zinc-200 font-medium cursor-pointer"
+                  >
+                    Tekrar Dene
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Footer note */}
+          {lyricsData?.source && (
+            <div className="mt-3 pt-2 border-t border-black/5 dark:border-white/5 text-[10px] text-zinc-400 dark:text-zinc-500 flex items-center justify-between shrink-0 font-mono">
+              <span>KAYNAK: {lyricsData.source.toUpperCase()}</span>
+              {lyricsData?.artist && <span className="truncate max-w-[150px] font-semibold">{lyricsData.artist}</span>}
+            </div>
+          )}
+        </div>
+      )}
     </footer>
   );
 }
