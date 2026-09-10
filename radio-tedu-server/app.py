@@ -1,3 +1,8 @@
+
+# radio-tedu backend api (flask sunucusu)
+# gemini ai entegrasyonu, icecast canlı akış metaveri (now playing) okuma,
+# itunes/lrclib/ovh şarkı sözleri ve renk paleti analiz servisleri
+
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import google.generativeai as genai
@@ -5,18 +10,18 @@ import json
 import os
 from dotenv import load_dotenv
 
-# .env dosyasını hem çalışılan dizinden hem de app.py'nin bulunduğu klasörden yükle
+# # .env dosyasını hem çalışılan dizinden hem de app.py'nin bulunduğu klasörden yükler
 env_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(dotenv_path=env_path)
 load_dotenv()
 
 app = Flask(__name__)
 
-# Production vs Development CORS yapılandırması
+# production vs dev cors konfigürasyonu
 ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "*").split(",")
 CORS(app, resources={r"/api/*": {"origins": ALLOWED_ORIGINS}})
 
-# Environment Variable'dan API key alma
+# çevre değişkeninden api key alma
 api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
 if api_key:
     genai.configure(api_key=api_key)
@@ -25,6 +30,7 @@ else:
     print("UYARI: GEMINI_API_KEY cevre degiskeni (.env dosyasi) bulunamadi!")
 
 
+# yapay zeka yanıtının json formatında ve kısa kalmasını sağlar
 generation_config = {
     "temperature": 0.7,
     "max_output_tokens": 500,
@@ -50,7 +56,7 @@ import urllib.request
 import re
 import time
 
-# Canlı çalan şarkı önbelleği
+# canlı çalan şarkı önbelleği
 now_playing_cache = {}
 
 STATION_MAP = {
@@ -111,15 +117,17 @@ except ImportError:
 
 artwork_cache = {}
 
+# arama apilerinden en doğru sonucu almak için kelimeleri temizleyen fonksiyon
 def clean_search_term(text):
     if not text:
         return ""
-    # Parantez ve köşeli parantez içlerini temizle (örn. (Official Video), [Radio Edit], (Live), (Remastered))
-    cleaned = re.sub(r'[\(\[][^\)\]]*[\)\]]', '', text)
+    # parantez ve köşeli parantez içlerini temizler
+    cleaned = re.sub(r'[\(\]][^\)\]]*[\)\]]', '', text)
     # feat. / ft. ibarelerini temizle
     cleaned = re.sub(r'\b(feat|ft)\.?\s+.*$', '', cleaned, flags=re.I)
     return ' '.join(cleaned.split()).strip()
 
+# itunes sonuçlarından en uygun parçayı puanlayıp seçer
 def select_best_itunes_result(results, clean_song, clean_artist):
     if not results:
         return None
@@ -138,11 +146,11 @@ def select_best_itunes_result(results, clean_song, clean_artist):
         if clean_artist and (clean_artist.lower() in artist_name or artist_name in clean_artist.lower()):
             s += 40
 
-        # Film müziği (Soundtrack) veya karma albümleri orijinal albümün arkasına at
+        # film müziği veya karma albümleri orijinal albümün arkasına atar
         if 'soundtrack' in collection_name or 'various artists' in collection_name:
             s -= 25
 
-        # Orijinal parça aranıyorsa remix/flip versiyonları düşür
+        # orijinal parça aranıyorsa remix versiyonları düşürür
         if clean_song and ('remix' in track_name or 'flip' in track_name) and 'remix' not in clean_song.lower():
             s -= 15
 
@@ -150,6 +158,7 @@ def select_best_itunes_result(results, clean_song, clean_artist):
 
     return max(results, key=score)
 
+# itunes'tan yüksek çözünürlüklü albüm kapağı arar ve renk paletini çıkartır
 def get_artwork_and_palette(song, artist=""):
     if not song:
         return None
@@ -161,7 +170,7 @@ def get_artwork_and_palette(song, artist=""):
     clean_artist = clean_search_term(artist)
     term = f"{clean_artist} - {clean_song}".strip() if clean_artist and clean_song else (clean_song or song)
 
-    # Önbellek boyut kontrolü (bellek şişmesini önle)
+    # önbellek boyut kontrolü
     if len(artwork_cache) > 250:
         for old_k in list(artwork_cache.keys())[:50]:
             artwork_cache.pop(old_k, None)
@@ -173,7 +182,7 @@ def get_artwork_and_palette(song, artist=""):
             data = json.loads(resp.read().decode('utf-8'))
             results = data.get('results', [])
             
-            # İlk arama sonuç vermezse sadece şarkı adıyla dene
+            # ilk arama sonuç vermezse sadece şarkı adıyla dener
             if not results and clean_song and clean_artist:
                 fallback_url = f"https://itunes.apple.com/search?term={urllib.parse.quote(clean_song)}&entity=song&limit=8"
                 with urllib.request.urlopen(urllib.request.Request(fallback_url, headers={'User-Agent': 'Mozilla/5.0'}), timeout=2.0) as fresp:
@@ -185,7 +194,7 @@ def get_artwork_and_palette(song, artist=""):
                 art_hires = best_match.get('artworkUrl100', '').replace('100x100bb', '600x600bb')
                 art_thumb = best_match.get('artworkUrl100', '')
                 
-                # Küçük görsel üzerinden mikrosaniyeler içinde renk paleti çıkar
+                # küçük görsel üzerinden renk paleti çıkarır
                 palette = None
                 if Image is not None and art_thumb:
                     try:
@@ -206,7 +215,7 @@ def get_artwork_and_palette(song, artist=""):
                                 mx, mn = max(red, grn, blu), min(red, grn, blu)
                                 return (mx - mn) / (mx if mx > 0 else 1)
                                 
-                            # En canlı renk tonunu seç
+                            # en canlı renk tonunu seçer
                             vibrant = max(colors[:25], key=lambda c: sat(*c[1]) * (c[0] ** 0.5))[1]
                             palette = {
                                 "dominant": f"#{dom_r:02x}{dom_g:02x}{dom_b:02x}",
@@ -246,7 +255,7 @@ def now_playing():
 
     meta = None
 
-    # 1. Öncelik: Doğrudan radiotedu.com Resmi WordPress REST API (radiotedu.com canlı verisi)
+    # 1. öncelik: doğrudan radiotedu.com resmi wordpress rest api verisi
     if station_id:
         try:
             api_url = f"https://radiotedu.com/wp-json/radiotedu/v1/stations/{station_id}/live"
@@ -263,7 +272,7 @@ def now_playing():
         except Exception:
             pass
 
-    # 2. İkincil Öncelik: Doğrudan Icecast canlı yayın akış başlıkları (%100 anlık veri)
+    # 2. öncelik: doğrudan icecast canlı yayın akış başlıkları
     if not meta:
         meta = extract_metadata_from_stream(stream_url)
 
@@ -273,13 +282,13 @@ def now_playing():
         "title": None
     }
 
-    # Eğer şarkı bilgisi varsa, albüm kapağını ve renk paletini zenginleştir
+    # eğer şarkı bilgisi varsa albüm kapağını ve renk paletini zenginleştirir
     if response_data.get("song"):
         is_jingle = bool(re.search(r'^(tedu[_-]?\d*|jingle|radiotedu)$', response_data["song"], re.I))
         if not is_jingle:
             art_info = get_artwork_and_palette(response_data["song"], response_data.get("artist", ""))
             if art_info:
-                # Orijinal albüm kapağını (iTunes/Apple Music) genel istasyon afişlerinin önüne al
+                # orijinal albüm kapağını genel istasyon afişlerinin önüne alır
                 if art_info.get("artwork"):
                     response_data["artwork"] = art_info.get("artwork")
                 response_data["palette"] = art_info.get("palette")
@@ -293,6 +302,7 @@ def now_playing():
 
 lyrics_cache = {}
 
+# 4 aşamalı şarkı sözü arama hattı
 def fetch_lyrics_from_sources(song, artist=""):
     if not song:
         return {"lyrics": None, "error": "No song specified"}
@@ -309,7 +319,7 @@ def fetch_lyrics_from_sources(song, artist=""):
         lyrics_cache[cache_key] = res
         return res
 
-    # 1. LRCLIB Direct Get
+    # 1. lrclib direct get
     if clean_artist and clean_song:
         try:
             url = f"https://lrclib.net/api/get?artist_name={urllib.parse.quote(clean_artist)}&track_name={urllib.parse.quote(clean_song)}"
@@ -326,7 +336,7 @@ def fetch_lyrics_from_sources(song, artist=""):
         except Exception:
             pass
 
-    # 2. LRCLIB Search Query
+    # 2. lrclib search query
     query_term = f"{clean_artist} {clean_song}".strip() or clean_song or song
     if query_term:
         try:
@@ -351,7 +361,7 @@ def fetch_lyrics_from_sources(song, artist=""):
         except Exception:
             pass
 
-    # 3. Lyrics OVH API
+    # 3. lyrics ovh api
     if clean_artist and clean_song:
         try:
             url = f"https://api.lyrics.ovh/v1/{urllib.parse.quote(clean_artist)}/{urllib.parse.quote(clean_song)}"
@@ -365,7 +375,7 @@ def fetch_lyrics_from_sources(song, artist=""):
         except Exception:
             pass
 
-    # 4. Gemini AI fallback if configured
+    # 4. gemini ai fallback (yapılandırılmışsa)
     if model and api_key and (clean_song or song):
         try:
             prompt = (
@@ -386,6 +396,7 @@ def fetch_lyrics_from_sources(song, artist=""):
     lyrics_cache[cache_key] = res
     return res
 
+# çalan şarkının sözlerini getiren endpoint
 @app.route('/api/lyrics', methods=['GET'])
 def lyrics():
     song = request.args.get('song', '').strip()
@@ -396,65 +407,190 @@ def lyrics():
     return jsonify(res)
 
 
+import concurrent.futures
+import random
+
+# gemini api key olmadığında veya bağlantı koptuğunda devreye giren şarkılar
+FALLBACK_MUSIC_DATABASE = {
+    "sleepy": [
+        {"song": "Lofi Girl - Snowman", "msg_tr": "Yorgunluğunu ve uykunu üzerinizden alacak sakin, huzurlu tınılarla stüdyodayız. Arkana yaslan ve ritme bırak!", "msg_en": "Unwind and let these soothing lo-fi beats wash away your exhaustion. Take a deep breath!"},
+        {"song": "Cigarettes After Sex - Apocalypse", "msg_tr": "Geceye veya yorgun bir ana en çok yakışan bu rüya gibi melodi seninle.", "msg_en": "A dreamy track to companion your restful moments."},
+        {"song": "Joji - Glimpse of Us", "msg_tr": "Ruhunu dinlendirecek ve zihnini boşaltacak yumuşak bir melodi stüdyodan geliyor.", "msg_en": "A soft, emotional track to help you relax and recharge."},
+        {"song": "Mac DeMarco - Chamber of Reflection", "msg_tr": "Kendi kabuğuna çekilip dinlenmek isteyenler için harika bir synth tınısı.", "msg_en": "Chill synth vibes to reflect and relax."},
+        {"song": "Yiruma - River Flows in You", "msg_tr": "Su gibi akan pürüzsüz piyano tınılarıyla tüm yorgunluğunu geride bırak.", "msg_en": "Smooth piano melodies to wash away the day's fatigue."}
+    ],
+    "study": [
+        {"song": "ChilledCow - Lofi Study Beats", "msg_tr": "Finaller ve odaklanma maratonu için tam frekansttayız. Zihnini tazeleyecek bu parça seninle!", "msg_en": "Locking into study mode! Here is a focused track to keep your productivity flowing."},
+        {"song": "Ludovico Einaudi - Nuvole Bianche", "msg_tr": "Derin odaklanma ve ders maratonları için ilham verici piyano ezgileri.", "msg_en": "Inspiring piano melodies for deep focus and study sessions."},
+        {"song": "Kiasmos - Looped", "msg_tr": "Ders çalışırken ritmini kaybetmeyeceğin minimalist ambient elektronik akış.", "msg_en": "Minimalist ambient beats to keep your mind locked in."},
+        {"song": "Sufjan Stevens - Mystery of Love", "msg_tr": "Kütüphanede veya masanda çizerken/yazarken sana eşlik edecek huzurlu tınılar.", "msg_en": "Peaceful acoustic vibes for your reading and writing sessions."},
+        {"song": "Massive Attack - Teardrop", "msg_tr": "Odaklanmayı artıran hipnotik bir trip-hop klasiği stüdyoda.", "msg_en": "A hypnotic classic to elevate your focus."}
+    ],
+    "coffee": [
+        {"song": "Norah Jones - Don't Know Why", "msg_tr": "Taze kahve kokusuna eşlik eden harika bir caz tınısı seçtik. Molanın tadını çıkar!", "msg_en": "Sip your coffee and enjoy this smooth jazz vibe. You deserve this break!"},
+        {"song": "Tom Misch - Disco Yes", "msg_tr": "Kahve molanı keyifli bir ritimle renklendirecek tatlı bir funk-pop parçası.", "msg_en": "A catchy funk-pop track to brighten up your coffee break!"},
+        {"song": "Chet Baker - My Funny Valentine", "msg_tr": "Kolej kafesinde hissettiren nostaljik ve sıcak caz melodisi.", "msg_en": "Warm and nostalgic jazz vibes for your coffee break."},
+        {"song": "Peggy Gou - It Makes You Forget", "msg_tr": "Kahveyle gelen tatlı bir enerji patlaması! Keyfini çıkar.", "msg_en": "A smooth, uplifting beat for your quick coffee reset."}
+    ],
+    "happy": [
+        {"song": "Dua Lipa - Levitating", "msg_tr": "Pozitif enerjin stüdyoya kadar ulaştı! Modunu zirveye taşıyacak bu hit parçayla ritme katıl!", "msg_en": "Your positive energy is contagious! Turn up the volume and dance along to this hit!"},
+        {"song": "Daft Punk - One More Time", "msg_tr": "Neşeni ve modunu katlayacak zamansız bir dans klasiği sizinle!", "msg_en": "A timeless dance anthem to multiply your good mood!"},
+        {"song": "The Weeknd - Blinding Lights", "msg_tr": "Işıkları yak ve ritme katıl! Yüksek enerjili retro synth ritimleri stüdyomuzdan yükseliyor.", "msg_en": "High-energy synthwave beats coming straight to your speakers!"},
+        {"song": "Earth, Wind & Fire - September", "msg_tr": "Yüzünü güldürecek ve modunu tavan yaptıracak saf funk enerjisi!", "msg_en": "Pure funk joy that will instantly make you smile!"},
+        {"song": "Pharrell Williams - Happy", "msg_tr": "Pozitif titreşimler dalga dalga yayılıyor! Gülümse ve müziğe eşlik et.", "msg_en": "Pure positive vibrations! Smile and sing along."}
+    ],
+    "sad": [
+        {"song": "Radiohead - High and Dry", "msg_tr": "Duygularına tercüman olacak derin bir melodi hazırladık. Yalnız değilsin, RadioTEDU seninle!", "msg_en": "A soulful melody to companion your quiet moments. You are never alone on RadioTEDU."},
+        {"song": "Coldplay - The Scientist", "msg_tr": "Derin hislere ve iç döküşlere birebir dokunan zamansız bir piyano klasiği.", "msg_en": "A timeless piano classic for deep reflection."},
+        {"song": "Phoebe Bridgers - Motion Sickness", "msg_tr": "Duygusal anlarına eşlik edecek harika bir indie dokunuşu.", "msg_en": "A beautiful indie track for your introspective moments."},
+        {"song": "Lana Del Rey - Video Games", "msg_tr": "Nostaljik ve melankolik bir atmosfer stüdyodan odana yayılıyor.", "msg_en": "A cinematic, melancholic atmosphere coming from our studio."}
+    ],
+    "rock": [
+        {"song": "Arctic Monkeys - Do I Wanna Know?", "msg_tr": "Gitar basları stüdyoyu sallıyor! Moduna tam uyacak bu saf rock klasiği sana gelsin.", "msg_en": "Heavy guitar riffs coming straight to your speakers! Turn it up and rock out."},
+        {"song": "The Strokes - The Less I Know The Better", "msg_tr": "Akılda kalıcı gitar yürüyüşleriyle enerjiyi yükselten indie-rock rüzgarı.", "msg_en": "Catchy basslines and indie-rock grooves to turn up the volume."},
+        {"song": "Red Hot Chili Peppers - Californication", "msg_tr": "Efsanevi gitar tonları ve zamansız melodiler stüdyomuzdan yükseliyor.", "msg_en": "Legendary guitar tones and timeless rock melodies."},
+        {"song": "Mor ve Ötesi - Bir Derdim Var", "msg_tr": "Türkçe rock sahnesinin başyapıtlarından biriyle sesimizi yükseltiyoruz!", "msg_en": "An iconic rock masterpiece echoing from our radio tower!"},
+        {"song": "Duman - Seni Kendime Sakladım", "msg_tr": "Gitar soloları ve tutkulu vokallerle kampüse ses veriyoruz!", "msg_en": "Passionate vocals and iconic guitar solos for your day."}
+    ],
+    "general": [
+        {"song": "Beach House - Space Song", "msg_tr": "Harika bir tercih! Kampüsün havasına ve senin moduna en çok yakışan bu tını stüdyomuzdan sana geliyor.", "msg_en": "A classic vibe selected just for you. Sit back and enjoy the broadcast!"},
+        {"song": "Fleetwood Mac - Dreams", "msg_tr": "Zamansız ve büyüleyici bir klasik! Radyo frekanslarımızın en sevilen parçası seninle.", "msg_en": "A timeless, enchanting classic! One of our most loved radio favorites."},
+        {"song": "The XX - Intro", "msg_tr": "Stüdyomuzun imza parçalarından biri! Derin atmosferik ritimlerle anın tadını çıkar.", "msg_en": "One of our signature station tracks! Enjoy the atmospheric rhythm."},
+        {"song": "Men I Trust - Show Me How", "msg_tr": "Yumuşak ve akıcı indie-pop tınılarıyla gününe tatlı bir dokunuş yapıyoruz.", "msg_en": "Smooth indie-pop melodies to add a sweet touch to your broadcast."},
+        {"song": "M83 - Midnight City", "msg_tr": "Şehrin ve kampüsün ritmini yakalayan muhteşem bir synth-pop klasiği!", "msg_en": "An epic synth-pop anthem capturing the pulse of the city!"},
+        {"song": "Glass Animals - Heat Waves", "msg_tr": "Çok istenen ve sevilen bu güncel parçayla yayınımıza devam ediyoruz!", "msg_en": "Continuing our broadcast with this highly requested hit!"},
+        {"song": "MGMT - Kids", "msg_tr": "Gençlik enerjisini ve radyo ruhunu yansıtan efsanevi bir elektronik pop parçası!", "msg_en": "An iconic electro-pop track embodying the youthful spirit of RadioTEDU!"}
+    ]
+}
+
+# dinleyicinin dilini (tr/en) otomatik tespit eden fonksiyon
+def detect_language(text, default_lang='tr'):
+    if not text:
+        return default_lang
+    text_lower = text.lower()
+    tr_indicators = ['ç', 'ğ', 'ı', 'ö', 'ş', 'ü', 'hissediyorum', 'yorgun', 'uykulu', 'ders', 'çalış', 'kahve', 'mola', 'güzel', 'mutlu', 'üzgün', 'gece', 'sabah', 'finaller', 'sınav', 'çimler', 'başka', 'baska', 'farklı', 'farkli', 'değişik', 'degisik']
+    if any(ind in text_lower for ind in tr_indicators):
+        return 'tr'
+    en_indicators = ['feel', 'feeling', 'tired', 'sleepy', 'study', 'studying', 'coffee', 'break', 'happy', 'sad', 'good', 'great', 'finals', 'exam', 'night', 'morning', 'another', 'different', 'more', 'else']
+    if any(ind in text_lower for ind in en_indicators):
+        return 'en'
+    return default_lang
+
+# gemini api yoksa ya da bağlantı koparsa çalışan yerel önerici motoru
+def get_smart_fallback_recommendation(user_mood, lang='tr', last_song=''):
+    mood_lower = (user_mood or '').lower()
+    target_lang = detect_language(user_mood, lang)
+
+    # 1. kategori belirleme
+    cat = "general"
+    if any(k in mood_lower for k in ['uyku', 'yorgun', 'hissediyorum', 'dinlen', 'bitkin', 'halsiz', 'sleep', 'tired', 'exhausted', 'cozy', 'bed']):
+        cat = "sleepy"
+    elif any(k in mood_lower for k in ['ders', 'çalış', 'final', 'sınav', 'kütüphane', 'ödev', 'proje', 'study', 'finals', 'exam', 'focus', 'library', 'work']):
+        cat = "study"
+    elif any(k in mood_lower for k in ['kahve', 'çay', 'mola', 'dinlenme', 'coffee', 'tea', 'break', 'relax']):
+        cat = "coffee"
+    elif any(k in mood_lower for k in ['mutlu', 'enerji', 'keyif', 'dans', 'parti', 'harika', 'süper', 'güneş', 'happy', 'energetic', 'dance', 'good', 'great', 'party', 'sun']):
+        cat = "happy"
+    elif any(k in mood_lower for k in ['üzgün', 'kırgın', 'dram', 'yalnız', 'efkar', 'hüzün', 'sad', 'lonely', 'heartbreak', 'blue', 'cry']):
+        cat = "sad"
+    elif any(k in mood_lower for k in ['rock', 'gitar', 'metal', 'alternatif', 'indie', 'guitar']):
+        cat = "rock"
+
+    # kullanıcı alternatif istekte bulunduysa
+    is_asking_another = any(k in mood_lower for k in ['başka', 'baska', 'farklı', 'farkli', 'değişik', 'degisik', 'bir tane daha', 'diğer', 'diger', 'yeniden', 'yine', 'another', 'different', 'more', 'else', 'next'])
+
+    pool = list(FALLBACK_MUSIC_DATABASE.get(cat, FALLBACK_MUSIC_DATABASE["general"]))
+    if is_asking_another or cat == "general":
+        extended_pool = []
+        for c_items in FALLBACK_MUSIC_DATABASE.values():
+            extended_pool.extend(c_items)
+        pool = extended_pool
+
+    # son önerilen şarkıyı havuzdan çıkarır aynı şarkı üst üste gelmesin
+    if last_song:
+        filtered_pool = [item for item in pool if item["song"].lower() != last_song.lower()]
+        if filtered_pool:
+            pool = filtered_pool
+
+    selected = random.choice(pool)
+    msg = selected["msg_tr"] if target_lang == 'tr' else selected["msg_en"]
+    
+    return {
+        "song": selected["song"],
+        "message": msg
+    }
+
+# ruh haline göre ai dj önerisi sunan endpoint
 @app.route('/api/ai-director', methods=['POST'])
 def ai_director():
     try:
         data = request.get_json() or {}
-        user_mood = (data.get('mood') or '').strip()[:200]  # Maksimum 200 karakter sınırı (DoS & Prompt Injection koruması)
+        user_mood = (data.get('mood') or '').strip()[:200]  # maksimum 200 karakter sınırı
         lang = (data.get('lang') or 'tr').strip().lower()
+        last_song = (data.get('last_song') or '').strip()
         if lang not in ['tr', 'en']:
             lang = 'tr'
         
+        target_lang = detect_language(user_mood, lang)
+
         if not user_mood:
-            fallback_msg = "Please share your mood or activity with us!" if lang == 'en' else "Lütfen ruh halini bizimle paylaş!"
+            fallback_msg = "Please share your mood or activity with us!" if target_lang == 'en' else "Lütfen ruh halini bizimle paylaş!"
             return jsonify({"song": "RadioTEDU", "message": fallback_msg})
 
-        prompt = (
-            f"Listener input: '{user_mood}'. "
-            f"Current interface language: '{lang}'. "
-            f"LANGUAGE DIRECTIVE: Analyze the language of the listener's input ('{user_mood}'). "
-            f"1. If the listener's message is in English (e.g. 'tired, finals again', 'coffee break', 'happy'), the DJ message MUST be in English. "
-            f"2. If the listener's message is in Turkish, the DJ message MUST be in Turkish. "
-            f"3. If the language of the message is ambiguous, use the interface language ('{lang}'). "
-            f"Never reply in Turkish to an English query. "
-            f"Provide a fitting song (Artist - Title) and a warm, punchy 1-2 sentence DJ shout-out."
-        )
-        
-        try:
-            response = model.generate_content(prompt)
-        except Exception as model_err:
-            print("Primary model error, trying fallback:", model_err)
-            fallback_model = genai.GenerativeModel(
-                model_name="gemini-1.5-pro",
-                generation_config=generation_config,
-                system_instruction=AI_SYSTEM_INSTRUCTION
+        # gemini api key tanımlıysa dene
+        if api_key and model:
+            prompt = (
+                f"Listener input: '{user_mood}'. "
+                f"Current interface language: '{lang}'. "
+                f"LANGUAGE DIRECTIVE: Analyze the language of the listener's input ('{user_mood}'). "
+                f"1. If the listener's message is in English (e.g. 'tired, finals again', 'coffee break', 'happy'), the DJ message MUST be in English. "
+                f"2. If the listener's message is in Turkish, the DJ message MUST be in Turkish. "
+                f"3. If the language of the message is ambiguous, use the interface language ('{lang}'). "
+                f"Never reply in Turkish to an English query. "
+                f"CRITICAL: Do NOT recommend the song '{last_song}' if provided! Recommend a DIFFERENT song! "
+                f"Provide a fitting song (Artist - Title) and a warm, punchy 1-2 sentence DJ shout-out."
             )
-            response = fallback_model.generate_content(prompt)
+            
+            def call_gemini():
+                try:
+                    return model.generate_content(prompt)
+                except Exception as model_err:
+                    print("Primary model error, trying fallback:", model_err)
+                    fallback_model = genai.GenerativeModel(
+                        model_name="gemini-1.5-pro",
+                        generation_config=generation_config,
+                        system_instruction=AI_SYSTEM_INSTRUCTION
+                    )
+                    return fallback_model.generate_content(prompt)
 
-        raw_text = response.text.strip()
-        
-        # Regex ile JSON objesini çıkar ({ ... })
-        match = re.search(r'\{.*\}', raw_text, re.DOTALL)
-        if match:
-            json_str = match.group(0)
-            result = json.loads(json_str)
-        else:
-            result = json.loads(raw_text)
+            # 6sn timeout ile dene
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(call_gemini)
+                try:
+                    response = future.result(timeout=6.0)
+                    raw_text = response.text.strip()
+                    match = re.search(r'\{.*\}', raw_text, re.DOTALL)
+                    if match:
+                        json_str = match.group(0)
+                        result = json.loads(json_str)
+                    else:
+                        result = json.loads(raw_text)
 
-        return jsonify(result)
+                    if isinstance(result, dict) and result.get("song") and result.get("message"):
+                        return jsonify(result)
+                except Exception as api_err:
+                    print("Gemini API call or parsing error:", api_err)
+
+        # api yoksa ya da hata aldıysa yerel önericiyi çalıştırır
+        fallback_result = get_smart_fallback_recommendation(user_mood, target_lang, last_song)
+        return jsonify(fallback_result)
 
     except Exception as e:
         print("Hata:", str(e).encode("ascii", errors="ignore").decode("ascii"))
-        error_msg = (
-            "The AI DJ experienced a brief static burst, but the broadcast continues!"
-            if lang == 'en' else
-            "Yapay zeka müziği sezerken minik bir frekans kopması yaşadı, ama yayın devam ediyor!"
-        )
-        return jsonify({
-            "song": "RadioTEDU",
-            "message": error_msg
-        })
+        fallback_result = get_smart_fallback_recommendation(user_mood, lang, last_song)
+        return jsonify(fallback_result)
 
+# prod ortamında client dist klasörünü sunan fallback
 CLIENT_DIST = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'radio-tedu-client', 'dist'))
 
 @app.route('/', defaults={'path': ''})

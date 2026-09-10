@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+// koyu ve açık tema yönetimini ve view transitions animasyonlarını sağlayan context
 export const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
@@ -8,9 +9,10 @@ export function ThemeProvider({ children }) {
     if (saved === 'light' || saved === 'dark') {
       return saved;
     }
-    return 'dark'; // Varsayılan: Dark mode
+    return 'dark'; // varsayılan: dark mode
   });
 
+  // her tema değiştirlildiğinde html elemanının listesini ve localStorage kaydını günceller
   useEffect(() => {
     const root = document.documentElement;
     if (theme === 'dark') {
@@ -23,16 +25,15 @@ export function ThemeProvider({ children }) {
     localStorage.setItem('radiotedu_theme', theme);
   }, [theme]);
 
+  // tema değişimi sırasında yumuşak geçiş efekti yapan fonk
   const toggleTheme = () => {
     const isCurrentDark = theme === 'dark';
     const nextTheme = isCurrentDark ? 'light' : 'dark';
-    // Dark -> Light: Soldan Sağa (ltr)
-    // Light -> Dark: Sağdan Sola (rtl)
     const direction = isCurrentDark ? 'ltr' : 'rtl';
 
     document.documentElement.setAttribute('data-theme-direction', direction);
 
-    // Eğer tarayıcı View Transitions API destekliyorsa gerçek sayfa elemanları üzerinde yönlü geçiş yap
+    // view transitions api destekleniyorsa yönlü geçiş yap
     if (document.startViewTransition) {
       document.startViewTransition(() => {
         setTheme(nextTheme);
@@ -51,6 +52,7 @@ export function ThemeProvider({ children }) {
   );
 }
 
+// themeContext değerlerine kolay erişim sağlayan custom hook
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) {

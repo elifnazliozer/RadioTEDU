@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 
+// kampüs duvarı başlangıç mesajları
 const INITIAL_SHOUTS = [
   { id: 1, author: "Mimarlık '25", loc: "Aksu Blokları DB20", text: "Stüdyoda sabahlarken ses ver! Çizimler bitmiyor...", type: "🏛️" },
   { id: 2, author: "Selin K.", loc: "Kütüphane Kat 3", text: "Kahve molası verenlere selam, Lo-Fi akışı harika gidiyor.", type: "☕" },
@@ -10,6 +11,7 @@ const INITIAL_SHOUTS = [
   { id: 6, author: "Mert B.", loc: "Kolej Kafe", text: "Beach House çalan direktöre teşekkürler, günümü kurtardı.", type: "🎧" }
 ];
 
+// kampüs duvarı canlı kayan yazı bandı ve not bırakma modalı
 export default function CampusWallTicker({ onOpenShoutModal }) {
   const { t } = useLanguage();
   const [shouts, setShouts] = useState(INITIAL_SHOUTS);
@@ -18,6 +20,7 @@ export default function CampusWallTicker({ onOpenShoutModal }) {
   const [newLoc, setNewLoc] = useState('');
   const [newText, setNewText] = useState('');
 
+  // kullanıcının bıraktığı yeni kampüs notunu kayan banda ekleyen form işleyici
   const handleAddShout = (e) => {
     e.preventDefault();
     if (!newText.trim()) return;
@@ -37,7 +40,7 @@ export default function CampusWallTicker({ onOpenShoutModal }) {
     setIsModalOpen(false);
   };
 
-  // ESC tuşuna basıldığında modalı kapat
+  // esc tuşuna basıldığında modalı kapat
   useEffect(() => {
     if (!isModalOpen) return;
     const handleKeyDown = (e) => {
@@ -49,21 +52,21 @@ export default function CampusWallTicker({ onOpenShoutModal }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isModalOpen]);
 
-  // Sonsuz döngü için listeyi çoğaltıyoruz
+  // sonsuz döngü için listeyi çoğaltıyoruz
   const marqueeItems = [...shouts, ...shouts];
 
   return (
     <>
-      {/* Kayan Bant Barı */}
+      {/* kayan bant barı */}
       <div className="w-full h-8 shrink-0 z-40 bg-[#f3eee6] dark:bg-[#0e0b0a] border-y border-stone-300 dark:border-stone-800 backdrop-blur-md flex items-center select-none overflow-hidden transition-colors duration-300 relative">
         
-        {/* Sol Kırmızı Rozet */}
+        {/* sol kırmızı rozet */}
         <div className="bg-red-700 text-white font-black text-[10px] uppercase tracking-widest px-3 h-full flex items-center gap-1.5 shrink-0 shadow-md z-10 font-mono">
           <span className="w-1.5 h-1.5 rounded-full bg-red-200 animate-ping"></span>
           <span>{t('wallBadge')}</span>
         </div>
 
-        {/* Kayan Yazı Alanı */}
+        {/* kayan yazı alanı */}
         <div className="flex-1 overflow-hidden relative">
           <div className="animate-ticker flex items-center whitespace-nowrap py-1 font-mono">
             {marqueeItems.map((item, idx) => (
@@ -81,7 +84,7 @@ export default function CampusWallTicker({ onOpenShoutModal }) {
           </div>
         </div>
 
-        {/* Sağ Buton: Not Bırak */}
+        {/* sağ buton: not bırak */}
         <button
           onClick={() => setIsModalOpen(true)}
           className="h-full px-3 bg-stone-200 hover:bg-red-700 text-stone-800 hover:text-white dark:bg-stone-800 dark:hover:bg-red-600 dark:text-stone-200 text-[10px] font-bold tracking-wider uppercase transition-all flex items-center gap-1 shrink-0 border-l border-stone-300 dark:border-stone-800 z-10 cursor-pointer shadow-sm font-mono"
@@ -92,7 +95,7 @@ export default function CampusWallTicker({ onOpenShoutModal }) {
         </button>
       </div>
 
-      {/* Mesaj Bırakma Modal Penceresi */}
+      {/* mesaj bırakma modal penceresi */}
       {isModalOpen && (
         <div 
           onClick={() => setIsModalOpen(false)}

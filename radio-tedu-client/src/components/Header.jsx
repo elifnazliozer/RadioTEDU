@@ -2,13 +2,14 @@ import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 
+// üst gezinme barı (header): logo, slogan, dil değiştirici ve tema değiştirici
 export default function Header() {
   const { isDark, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
 
   return (
     <header className="h-16 shrink-0 w-full z-40 border-b border-stone-200 dark:border-stone-800/80 bg-[#fdfbf7]/90 dark:bg-[#120e0c]/90 backdrop-blur-xl px-4 sm:px-8 flex items-center justify-between transition-colors duration-300 select-none">
-      {/* Sol Logo & Slogan */}
+      {/*sol logo ve slogan */}
       <div className="flex items-center gap-3">
         <img
           src={isDark ? "/logo_dark.png" : "/logo_light.png"}
@@ -20,9 +21,8 @@ export default function Header() {
         </span>
       </div>
       
-      {/* Sağ Dil, Tema & Canlı Yayın Butonları */}
+      {/* sağ dil, tema ve canlı yayın butonları */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* TR / EN Dil Seçici */}
         <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 rounded-lg bg-stone-200/80 dark:bg-[#1a1614] border border-stone-300 dark:border-stone-800 shadow-sm text-xs font-bold font-mono">
           <button
             onClick={() => setLanguage('tr')}
@@ -48,7 +48,7 @@ export default function Header() {
           </button>
         </div>
 
-        {/* Light / Dark Mode Toggle Butonu */}
+        {/* light / dark mode toggle butonu */}
         <button
           onClick={toggleTheme}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-stone-200/90 dark:bg-[#1a1614] hover:bg-stone-300 dark:hover:bg-stone-800 text-stone-800 dark:text-stone-200 border border-stone-300 dark:border-stone-800 shadow-sm transition-all cursor-pointer active:scale-95 font-mono"
@@ -73,7 +73,7 @@ export default function Header() {
           )}
         </button>
 
-        {/* Canlı Yayın Rozeti */}
+        {/* canlı yayın rozeti */}
         <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-500/15 text-red-700 dark:text-red-400 border border-red-500/30 shadow-sm font-mono">
           <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
           {t('liveBadge')}

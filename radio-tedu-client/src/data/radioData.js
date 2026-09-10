@@ -1,3 +1,4 @@
+// radioTEDU canlı yayın istasyonları (ana akış ve tematik alt kanallar)
 export const STATIONS = [
   {
     id: "radiotedu-main",
@@ -67,6 +68,7 @@ export const STATIONS = [
   }
 ];
 
+// radioTEDU stüdyolarından çıkan orijinal podcast serileri
 export const PODCASTS = [
   {
     id: "zit-kutuplar",
@@ -124,6 +126,7 @@ export const PODCASTS = [
   }
 ];
 
+// uygulama içindeki dahili ses oynatıcıyla dinlenebilen son podcast bölümleri
 export const LATEST_EPISODES = [
   {
     id: "ep-kadersel-asklar",

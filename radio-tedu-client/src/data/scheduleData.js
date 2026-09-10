@@ -1,4 +1,5 @@
-// RadioTEDU Resmi Yayın Akışı Verileri (radiotedu.com/yayin-akisi kaynaklı)
+// radioTEDU resmi yayın akışı verileri (radiotedu.com/yayin-akisi kaynaklı)
+// hafta içi yayın akışı program listesi
 export const WEEKDAY_SCHEDULE = [
   {
     id: "prog-1",
@@ -72,6 +73,7 @@ export const WEEKDAY_SCHEDULE = [
   }
 ];
 
+// hafta sonu yayın akışı program listesi
 export const WEEKEND_SCHEDULE = [
   {
     id: "w-prog-1",

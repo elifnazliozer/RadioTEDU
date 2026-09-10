@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { STATIONS, PODCASTS, LATEST_EPISODES } from '../data/radioData';
 import Header from './Header';
 
+// sol ana alan (keşfet sayfası): retro analog fm frekans kadranı, vu meter, radyo kanalları, podcastler ve oynatılabilir son bölümler
 export default function ExploreSection() {
   const { isPlaying, isLoading, currentTrack, playTrack, nowPlaying } = useContext(AudioContext);
   const { isDark, toggleTheme } = useTheme();
@@ -16,18 +17,18 @@ export default function ExploreSection() {
 
   return (
     <div className="w-full md:w-2/3 h-full flex flex-col border-r border-stone-200 dark:border-stone-800/80 bg-[#fdfbf7] dark:bg-[#120e0c] text-stone-900 dark:text-stone-100 transition-colors duration-300 overflow-hidden">
-      {/* Sabit Header (Yalnızca Sol Sütun Üstünde) */}
+      {/* sabit header (yalnızca sol sütun üstünde) */}
       <Header />
 
-      {/* Kaydırılabilir Keşfet İçeriği */}
+      {/* kaydırılabilir keşfet içeriği */}
       <main className="flex-1 overflow-y-auto p-6 pb-6 space-y-8 custom-scrollbar">
-      {/* Hero Banner / Vintage Analog Radyo Konsolu */}
+      {/* hero banner / vintage analog radyo konsolu */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-stone-100 via-stone-200/60 to-[#eeeae0] dark:from-[#18181b] dark:via-[#131316] dark:to-black border border-stone-300 dark:border-stone-800/80 p-6 sm:p-8 lg:p-9 shadow-xl dark:shadow-2xl shrink-0 transition-all duration-300 group">
-        {/* Subtle Izgara & Glow Efekti */}
+        {/* hafif ızgara ve glow efekti */}
         <div className="absolute inset-0 bg-[radial-gradient(#dc2626_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.07] pointer-events-none" />
         <div className="absolute -right-20 -top-20 w-96 h-96 bg-red-600/10 dark:bg-red-600/15 rounded-full blur-3xl pointer-events-none transition-all duration-700 group-hover:bg-red-600/20" />
 
-        {/* Üst Bilgi Çubuğu: Stüdyo Durumu, Frekans & Kalite */}
+        {/* üst bilgi çubuğu: stüdyo durumu, frekans ve kalite */}
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 pb-4 mb-6 border-b border-stone-300/80 dark:border-stone-800/80">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
@@ -49,7 +50,7 @@ export default function ExploreSection() {
           </div>
         </div>
 
-        {/* NOSTALJİK ANALOG FM FREKANS KADRANI (TUNING DIAL) */}
+        {/* nostaljik analog fm frekans kadranı */}
         <div className="relative z-10 mb-6 bg-stone-200/90 dark:bg-[#0c0c0e] border border-stone-300 dark:border-stone-800 rounded-2xl p-3 shadow-inner overflow-hidden">
           <div className="flex items-center justify-between text-[10px] font-mono text-stone-700 dark:text-stone-400 px-2 mb-1.5 font-bold tracking-widest select-none">
             <span>88.0 MHz</span>
@@ -60,16 +61,16 @@ export default function ExploreSection() {
             <span>108.0 MHz</span>
           </div>
 
-          {/* Frekans Çizgileri ve Hareketli Kırmızı İbre */}
+          {/* frekans çizgileri ve hareketli kırmızı ibre */}
           <div className="relative h-6 bg-stone-100 dark:bg-stone-900 rounded-lg border border-stone-300/80 dark:border-stone-800/80 flex items-center px-2 overflow-hidden">
-            {/* Arka plan ızgara çizgileri */}
+            {/* arka plan ızgara çizgileri */}
             <div className="absolute inset-0 flex justify-between px-3 items-center opacity-40 pointer-events-none">
               {[...Array(25)].map((_, i) => (
                 <span key={i} className={`w-[1px] ${i % 5 === 0 ? 'h-4 bg-stone-600 dark:bg-stone-400' : 'h-2 bg-stone-400 dark:bg-stone-600'}`} />
               ))}
             </div>
 
-            {/* Hareketli Kırmızı Analog İbre */}
+            {/* hareketli kırmızı analog ibre */}
             <div
               className="absolute top-0 bottom-0 w-0.5 bg-red-600 shadow-[0_0_8px_#dc2626] transition-all duration-700 z-10 flex flex-col items-center justify-between"
               style={{
@@ -86,9 +87,9 @@ export default function ExploreSection() {
           </div>
         </div>
 
-        {/* Ana İçerik Grid (Sol: Metin & Butonlar, Sağ: Radyo Kartı & Analog VU Meter) */}
+        {/* ana içerik gridi metinler ve analog vu meter */}
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          {/* Sol Kolon (7 Birim) */}
+          {/* sol kolon */}
           <div className="lg:col-span-7 space-y-5">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-bold uppercase tracking-wider mb-3">
@@ -106,7 +107,7 @@ export default function ExploreSection() {
               {t('heroDesc')}
             </p>
 
-            {/* Butonlar */}
+            {/* butonlar */}
             <div className="flex flex-wrap items-center gap-3.5 pt-1">
               <button
                 onClick={() => playTrack(mainStation)}
@@ -151,7 +152,7 @@ export default function ExploreSection() {
               </a>
             </div>
 
-            {/* Frekans Butonları */}
+            {/* frekans butonları */}
             <div className="pt-3 border-t border-stone-300/80 dark:border-stone-800/80">
               <span className="text-[11px] font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider block mb-2 font-mono">
                 {t('heroQuickStations')}
@@ -185,15 +186,15 @@ export default function ExploreSection() {
             </div>
           </div>
 
-          {/* Sağ Kolon (5 Birim): Retro Radyo Kabini & İbreli Analog VU Meter */}
+          {/* sağ kolon: retro radyo kabini ve ibreli analog vu meter */}
           <div className="lg:col-span-5 flex flex-col items-center justify-center">
             <div className="w-full max-w-sm bg-white dark:bg-[#18181c] p-5 rounded-3xl border border-stone-300 dark:border-stone-800 shadow-xl dark:shadow-2xl relative overflow-hidden group/card">
-              {/* Çalma esnasında kırmızı parlama */}
+              {/* çalma esnasında kırmızı parlama */}
               {isPlaying && (
                 <div className="absolute inset-0 bg-red-600/5 animate-pulse pointer-events-none rounded-3xl" />
               )}
 
-              {/* Albüm Görseli / Vinyl Efekti */}
+              {/* albüm görseli ve vinil efekti */}
               <div className="relative aspect-square w-full rounded-2xl overflow-hidden mb-4 bg-stone-100 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 flex items-center justify-center shadow-lg">
                 <img
                   src={nowPlaying?.artwork || currentTrack?.artwork || mainStation.artwork}
@@ -203,7 +204,7 @@ export default function ExploreSection() {
                   }`}
                 />
                 
-                {/* Alt Kısım: Şarkı / Sanatçı Bilgisi */}
+                {/* alt kısım: şarkı ve sanatçı bilgisi */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent flex items-end justify-between p-4">
                   <div className="min-w-0 pr-2">
                     <h3 className="text-white font-serif font-bold text-base sm:text-lg leading-tight truncate drop-shadow-md" title={nowPlaying?.song || currentTrack?.title || mainStation.title}>
@@ -219,7 +220,7 @@ export default function ExploreSection() {
                 </div>
               </div>
 
-              {/* NOSTALJİK İBRELİ ANALOG VU METER (RETRO DESİBEL ÖLÇER) */}
+              {/* nostaljik ibreli analog vu meter */}
               <div className="bg-stone-100 dark:bg-[#0c0c0e] border border-stone-300 dark:border-stone-800 rounded-xl p-3 shadow-inner">
                 <div className="flex items-center justify-between text-[9px] font-mono text-stone-600 dark:text-stone-400 mb-1 px-1 font-bold">
                   <span>-20</span>
@@ -230,7 +231,7 @@ export default function ExploreSection() {
                   <span className="text-red-600">+3 dB</span>
                 </div>
                 
-                {/* VU Meter İbresi */}
+                {/* vu meter ibresi */}
                 <div className="relative h-7 bg-stone-200/90 dark:bg-stone-900 rounded border border-stone-300 dark:border-stone-800 flex items-center justify-center overflow-hidden">
                   <div
                     className="w-0.5 h-6 bg-red-600 shadow-[0_0_8px_#dc2626] origin-bottom transition-transform duration-300"
@@ -248,7 +249,7 @@ export default function ExploreSection() {
         </div>
       </section>
 
-      {/* Keşfet Sekmeleri (Tabs) */}
+      {/* keşfet sekmeleri */}
       <div className="flex items-center gap-2 border-b border-stone-200 dark:border-stone-800 pb-3 shrink-0 overflow-x-auto">
         {[
           { id: 'all', label: t('tabAll') },
@@ -270,7 +271,7 @@ export default function ExploreSection() {
         ))}
       </div>
 
-      {/* BÖLÜM 1: RADYOLAR */}
+      {/* bölüm 1: radyolar */}
       {(activeTab === 'all' || activeTab === 'radios') && (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
@@ -352,7 +353,7 @@ export default function ExploreSection() {
         </section>
       )}
 
-      {/* BÖLÜM 2: PODCASTLER */}
+      {/* bölüm 2: podcastler */}
       {(activeTab === 'all' || activeTab === 'podcasts') && (
         <section className="space-y-4 pt-2">
           <div className="flex items-center justify-between">
@@ -409,7 +410,7 @@ export default function ExploreSection() {
         </section>
       )}
 
-      {/* BÖLÜM 3: SON BÖLÜMLER (OYNATILABİLİR) */}
+      {/* bölüm 3: son bölümler */}
       {(activeTab === 'all' || activeTab === 'episodes') && (
         <section className="space-y-4 pt-2">
           <div className="flex items-center justify-between">

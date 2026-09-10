@@ -62,15 +62,15 @@ function App() {
   return (
     <div className="h-screen flex flex-col bg-zinc-50 dark:bg-radio-dark text-zinc-900 dark:text-white overflow-hidden transition-colors duration-300">
       
-      {/* Üst ana içerik (Sol: Keşfet Sayfası, Sağ: Program Takvimi & AI Direktörü) */}
+      {/*keşfet sayfası, program takvimi ve ai direktörü) */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         
-        {/* Sol sütun: RadioTEDU Keşfet Sayfası (Radyolar, Podcastler, Son Bölümler) */}
+        {/* radioTEDU keşfet sayfası radyolar, podcastler, son bölümler */}
         <ExploreSection />
 
-        {/* Sağ sütun: Takvim ve AI Direktörü Sohbeti */}
+        {/* sağ sütun: takvim ve ai direktörü sohbeti */}
         <aside className="w-full md:w-1/3 flex flex-col overflow-y-auto custom-scrollbar bg-[#fdfbf7] dark:bg-[#120e0c] border-t md:border-t-0 md:border-l border-stone-200 dark:border-stone-800 transition-colors duration-300">
-          {/* Gelişmiş Dinamik Yayın Akışı / Takvim Bileşeni */}
+          {/* yayın akışı ve takvim bileşeni */}
           <ScheduleWidget />
           
           <div className="flex-1 min-h-[320px] p-5 flex flex-col bg-[#fdfbf7] dark:bg-[#120e0c] shrink-0">
@@ -86,7 +86,7 @@ function App() {
               <p className="text-xs text-stone-600 dark:text-stone-400 mt-1">{t('aiSubtitle')}</p>
             </div>
             
-            {/* Sohbet / Mesaj Akışı */}
+            {/* sohbet akışı*/}
             <div className="flex-1 overflow-y-auto space-y-2.5 mb-3 pr-1 text-xs custom-scrollbar">
               {chatMessages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-stone-500 dark:text-stone-400 text-center text-xs px-4">
@@ -119,7 +119,7 @@ function App() {
                               <span className="truncate">{msg.song}</span>
                             </div>
                             <a
-                              href={`https://open.spotify.com/search/${encodeURIComponent(msg.song)}`}
+                              href={`https://open.spotify.com/search/${encodeURIComponent(msg.song)}`} // ai tarafından önerilen şarkıyı spotify'da açmak için
                               target="_blank"
                               rel="noreferrer"
                               className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#1DB954] hover:text-[#1ed760] bg-[#1DB954]/10 hover:bg-[#1DB954]/20 px-2 py-0.5 rounded-md transition-all shrink-0 cursor-pointer"
@@ -149,7 +149,7 @@ function App() {
               <div ref={chatEndRef} />
             </div>
 
-            {/* Input Alanı */}
+            {/* ai chat input alanı */}
             <div className="bg-stone-100 dark:bg-[#1a1614] p-2 rounded-xl border border-stone-200 dark:border-stone-800 flex items-center gap-2 shrink-0 shadow-sm">
               <input 
                 type="text" 
@@ -174,10 +174,10 @@ function App() {
         </aside>
       </div>
 
-      {/* Canlı Kampüs Duvarı Kayan İstek/Mesaj Bandı (Ticker) */}
+      {/* canlı kampüs durvarı*/}
       <CampusWallTicker />
 
-      {/* Alt Artistik Radyo Oynatıcısı (Artistic Player) */}
+      {/* alt kısım radyo oynatıcısı */}
       <ArtisticPlayer />
 
     </div>

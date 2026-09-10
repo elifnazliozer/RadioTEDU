@@ -1,14 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+// tüm uygulama genelinde türkçe ve ingilizce dil desteği çeviri sözlüğü
 export const translations = {
   tr: {
-    // Header
+    // header
     slogan: "Farkı Dinle, Farklı Hisset!",
     themeLight: "Açık",
     themeDark: "Koyu",
     liveBadge: "CANLI YAYIN",
     
-    // Hero
+    // hero
     heroSubtitle: "● TED Üniversitesi'nin Sesi",
     heroTitle1: "Farkı dinle.",
     heroTitle2: "Farklı hisset.",
@@ -23,33 +24,33 @@ export const translations = {
     heroVintageTube: "CANLI YAYINDA",
     heroAnalogDial: "ANALOG KADRAN",
     
-    // Tabs
+    // tabs
     tabAll: "Tüm İçerikler",
     tabRadios: "Radyolar (5)",
     tabPodcasts: "Podcastler (6)",
     tabEpisodes: "Son Bölümler",
     
-    // Stations
+    // stations
     stationsHeaderSmall: "01 / Canlı Kanallar",
     stationsHeaderBig: "Bugün ne dinliyoruz?",
     stationsCount: "6 Radyo Kanalı",
     listen: "Dinle",
     playingPause: "Çalıyor (Duraklat)",
     
-    // Podcasts
+    // podcasts
     podcastsHeaderSmall: "02 / Stüdyodan Çıkanlar",
     podcastsHeaderBig: "RadioTEDU Podcastleri",
     podcastsAllLink: "Tüm seriler →",
     podcastExploreLink: "Seriyi incele →",
     
-    // Latest Episodes
+    // latest episodes
     episodesHeaderSmall: "03 / Yeni Bölümler",
     episodesHeaderBig: "Şimdi Dinle",
     episodesSubtitle: "Tıklayıp Anında Başlatın",
     episodePlay: "Bölümü Dinle",
     episodePause: "Durdur",
     
-    // Schedule Widget
+    // schedule widget
     scheduleTitle: "Yayın Akışı",
     scheduleLiveNow: "Şu An Yayında",
     scheduleNext: "Sıradaki",
@@ -63,22 +64,22 @@ export const translations = {
     activeShow: "ŞU AN YAYINDA",
     broadcastProgress: "Yayın İlerlemesi",
     dailyPrograms: "Günün Programları",
-    clickForDetails: "tıkla ve detay gör",
+    clickForDetails: "detay görmek için tıkla",
     hostTeam: "Sunucu/Ekip",
     
-    // AI Director
+    // ai director
     aiTitle: "AI Müzik Direktörü",
-    aiSubtitle: "Ruh haline veya yaptığın aktiviteye göre içerik önerelim.",
+    aiSubtitle: "Ruh haline veya yaptığın aktiviteye göre içerik önerelem.",
     aiEmptyTitle: "Şu an ne yapıyorsun? Ruh halini yaz, RadioTEDU DJ'i sana özel çalsın!",
     aiEmptyHint: "Örn: \"Finallere çalışıyorum\", \"Kahve molası\"",
-    aiPlaceholder: "Örn: Kütüphanede ders çalışıyorum...",
+    aiPlaceholder: "...",
     aiLoading: "DJ parçayı seçiyor...",
     aiPreparing: "Hazırlanıyor...",
     aiDefaultSong: "RadioTEDU Canlı",
     aiSend: "Gönder",
     aiError: "Bağlantı kurulamadı. Sunucunun çalıştığından emin olun.",
     
-    // Campus Wall
+    // campus wall
     wallBadge: "KAMPÜS DUVARI",
     wallLeaveNote: "Not Bırak",
     wallModalTitle: "Kampüs Duvarına Not Bırak",
@@ -93,7 +94,7 @@ export const translations = {
     wallCancel: "Vazgeç",
     wallSubmit: "Duvara Gönder",
     
-    // Player
+    // player
     onAir: "ON AIR",
     standby: "BEKLEMEDE",
     liveTrack: "CANLI PARÇA",
@@ -115,13 +116,13 @@ export const translations = {
     closeLyrics: "Sözleri Kapat"
   },
   en: {
-    // Header
+    // header
     slogan: "Listen to the Difference, Feel Different!",
     themeLight: "Light",
     themeDark: "Dark",
     liveBadge: "LIVE ON AIR",
     
-    // Hero
+    // hero
     heroSubtitle: "● Voice of TED University",
     heroTitle1: "Listen to the difference.",
     heroTitle2: "Feel different.",
@@ -136,33 +137,33 @@ export const translations = {
     heroVintageTube: "LIVE ON AIR",
     heroAnalogDial: "ANALOG DIAL",
     
-    // Tabs
+    // tabs
     tabAll: "All Content",
     tabRadios: "Radios (5)",
     tabPodcasts: "Podcasts (6)",
     tabEpisodes: "Latest Episodes",
     
-    // Stations
+    // stations
     stationsHeaderSmall: "01 / Live Channels",
     stationsHeaderBig: "What are we playing today?",
     stationsCount: "6 Radio Channels",
     listen: "Listen",
     playingPause: "Playing (Pause)",
     
-    // Podcasts
+    // podcasts
     podcastsHeaderSmall: "02 / Studio Originals",
     podcastsHeaderBig: "RadioTEDU Podcasts",
     podcastsAllLink: "All series →",
     podcastExploreLink: "Explore series →",
     
-    // Latest Episodes
+    // latest episodes
     episodesHeaderSmall: "03 / New Releases",
     episodesHeaderBig: "Listen Now",
     episodesSubtitle: "Click & Play Instantly",
     episodePlay: "Play Episode",
     episodePause: "Pause",
     
-    // Schedule Widget
+    // schedule widget
     scheduleTitle: "On-Air Schedule",
     scheduleLiveNow: "Live Now",
     scheduleNext: "Up Next",
@@ -179,19 +180,19 @@ export const translations = {
     clickForDetails: "click for details",
     hostTeam: "Host/Team",
     
-    // AI Director
+    // ai director
     aiTitle: "AI Music Director",
     aiSubtitle: "Let us curate content tailored to your mood or activity.",
     aiEmptyTitle: "What are you doing right now? Share your mood, let RadioTEDU DJ play for you!",
     aiEmptyHint: "E.g.: \"Studying for finals\", \"Coffee break\"",
-    aiPlaceholder: "E.g.: Studying at the campus library...",
+    aiPlaceholder: "...",
     aiLoading: "DJ is picking a track...",
     aiPreparing: "Preparing...",
     aiDefaultSong: "RadioTEDU Live",
     aiSend: "Send",
     aiError: "Could not connect. Ensure the server is running.",
     
-    // Campus Wall
+    // campus wall
     wallBadge: "CAMPUS WALL",
     wallLeaveNote: "Post Shout",
     wallModalTitle: "Post to Campus Wall",
@@ -206,7 +207,7 @@ export const translations = {
     wallCancel: "Cancel",
     wallSubmit: "Post to Wall",
     
-    // Player
+    // player
     onAir: "ON AIR",
     standby: "STANDBY",
     liveTrack: "NOW PLAYING",
@@ -231,6 +232,7 @@ export const translations = {
 
 const LanguageContext = createContext();
 
+// kullanıcının tercih ettiği dili localStorage üzerinde tutan ve uygulamanın html lang özniteliğini güncelleyen provider
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguageState] = useState(() => {
     try {
@@ -248,7 +250,7 @@ export const LanguageProvider = ({ children }) => {
       localStorage.setItem('radiotedu_lang', nextLang);
       document.documentElement.lang = nextLang;
     } catch {
-      // ignore
+      // ignore yapacak
     }
   };
 
@@ -260,6 +262,7 @@ export const LanguageProvider = ({ children }) => {
     document.documentElement.lang = language;
   }, [language]);
 
+  // verilen key değerine göre aktif dildeki karşılık metni döndüren çeviri yardımcısı
   const t = (key) => {
     return translations[language]?.[key] || translations.tr[key] || key;
   };
@@ -271,6 +274,7 @@ export const LanguageProvider = ({ children }) => {
   );
 };
 
+// languageContext erişimi sağlayan custom hook
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
   if (!context) {

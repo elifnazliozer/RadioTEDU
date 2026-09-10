@@ -1,9 +1,11 @@
 import React, { createContext, useState, useEffect, useRef } from 'react';
 import { STATIONS } from '../data/radioData';
 
+// ses motorunu ve yayin kanallarini yoneten context
 export const AudioContext = createContext();
 
 export const AudioProvider = ({ children }) => {
+  // player state'leri
   const [currentTrack, setCurrentTrack] = useState(STATIONS[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -14,7 +16,7 @@ export const AudioProvider = ({ children }) => {
   const audioRef = useRef(null);
   const isChangingStreamRef = useRef(false);
 
-  // Emniyet zamanlayıcısı: 4 saniyeden fazla yüklemede kalırsa ve çalmaya başlamadıysa yüklemeyi kapat
+  // emniyet zamanlayıcısı: 4 saniyeden fazla yüklemede kalırsa yüklemeyi kapatır
   useEffect(() => {
     let timer;
     if (isLoading && !isPlaying) {
@@ -25,7 +27,7 @@ export const AudioProvider = ({ children }) => {
     return () => clearTimeout(timer);
   }, [isLoading, isPlaying]);
 
-  // Audio Nesnesinin Başlatılması
+  // audio nesnesinin başlatılması
   useEffect(() => {
     const audio = new Audio();
     audio.preload = "auto";
@@ -67,7 +69,7 @@ export const AudioProvider = ({ children }) => {
     };
   }, []);
 
-  // Canlı Şarkı Metaverisi (Now Playing) Çekimi
+  // canlı şarkı metaverisi çekimi
   useEffect(() => {
     let isMounted = true;
 
@@ -101,7 +103,7 @@ export const AudioProvider = ({ children }) => {
     };
   }, [currentTrack]);
 
-  // Kurşungeçirmez (Bulletproof) Oynatma Motoru
+  // kurşungeçirmez oynatma motoru
   const executePlay = async (trackToPlay) => {
     const audio = audioRef.current;
     if (!audio || !trackToPlay) return;
@@ -163,6 +165,7 @@ export const AudioProvider = ({ children }) => {
     }
   };
 
+  // secilen parcayi calan fn
   const playTrack = (track) => {
     if (!track) return;
     if (currentTrack?.id === track.id && isPlaying) {
@@ -172,6 +175,7 @@ export const AudioProvider = ({ children }) => {
     executePlay(track);
   };
 
+  // play/pause toggle fn
   const togglePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -185,6 +189,7 @@ export const AudioProvider = ({ children }) => {
     }
   };
 
+  // ses seviyesini ayarlar (0 ile 1 arasi)
   const setVolume = (val) => {
     setVolumeState(val);
     if (audioRef.current) {
@@ -195,6 +200,7 @@ export const AudioProvider = ({ children }) => {
     }
   };
 
+  // mute toggle
   const toggleMute = () => {
     if (audioRef.current) {
       audioRef.current.muted = !isMuted;
@@ -202,12 +208,14 @@ export const AudioProvider = ({ children }) => {
     setIsMuted(!isMuted);
   };
 
+  // sonraki istasyon
   const nextStation = () => {
     const currentIndex = STATIONS.findIndex(s => s.id === currentTrack.id);
     const nextIdx = (currentIndex + 1) % STATIONS.length;
     playTrack(STATIONS[nextIdx]);
   };
 
+  // onceki istasyon
   const prevStation = () => {
     const currentIndex = STATIONS.findIndex(s => s.id === currentTrack.id);
     const prevIdx = (currentIndex - 1 + STATIONS.length) % STATIONS.length;

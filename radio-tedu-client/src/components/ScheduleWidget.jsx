@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { WEEKDAY_SCHEDULE, WEEKEND_SCHEDULE } from '../data/scheduleData';
 import { useLanguage } from '../context/LanguageContext';
 
+// canlı yayın akışı bileşeni: anlık saat dilimine göre canlı yayındaki programı ve günlük akışı sunar
 export default function ScheduleWidget() {
   const { t } = useLanguage();
   const [selectedTab, setSelectedTab] = useState('today'); // 'today', 'weekday', 'weekend'
   const [expandedId, setExpandedId] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Canlı saat güncellemesi
+  // canlı saat güncellemesi
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 30000);
     return () => clearInterval(timer);
@@ -16,18 +17,18 @@ export default function ScheduleWidget() {
 
   const currentHour = currentTime.getHours();
   const currentMinutes = currentTime.getMinutes();
-  const dayOfWeek = currentTime.getDay(); // 0 = Pazar, 6 = Cumartesi
+  const dayOfWeek = currentTime.getDay(); // 0 = pazar, 6 = cumartesi
   const isWeekendNow = dayOfWeek === 0 || dayOfWeek === 6;
 
-  // Hangi liste gösterilecek?
+  // hangi liste gösterilecek
   let activeList = WEEKDAY_SCHEDULE;
   if (selectedTab === 'weekend' || (selectedTab === 'today' && isWeekendNow)) {
     activeList = WEEKEND_SCHEDULE;
   }
 
-  // Şu anki programa göre eşleştirme yap
+  // şu anki programa göre eşleştirme yap
   const currentProgram = activeList.find((prog) => {
-    // 22:00 - 02:00 gibi gece yarısını aşan saatler için kontrol
+    // gece yarısını aşan saatler için kontrol
     if (prog.endHour > 24) {
       if (currentHour >= prog.startHour || currentHour < prog.endHour - 24) {
         return true;
@@ -38,7 +39,7 @@ export default function ScheduleWidget() {
     return false;
   }) || activeList[0];
 
-  // Programın yüzde kaçının tamamlandığını hesapla
+  // programın yüzde kaçının tamamlandığını hesapla
   let progressPercent = 50;
   if (currentProgram) {
     const startMins = currentProgram.startHour * 60;
@@ -54,7 +55,7 @@ export default function ScheduleWidget() {
 
   return (
     <div className="p-4 sm:p-5 border-b border-stone-200 dark:border-stone-800 flex flex-col bg-[#fdfbf7] dark:bg-[#120e0c] text-stone-900 dark:text-stone-100 shrink-0 transition-colors duration-300">
-      {/* Başlık ve Gün Seçici */}
+      {/* başlık ve gün seçici */}
       <div className="flex items-center justify-between mb-3 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-700 dark:text-red-400 shadow-sm shrink-0">
@@ -76,7 +77,7 @@ export default function ScheduleWidget() {
           </div>
         </div>
 
-        {/* Sekmeler */}
+        {/* sekmeler */}
         <div className="flex items-center bg-stone-200/80 dark:bg-[#1a1614] p-0.5 rounded-lg border border-stone-300 dark:border-stone-800 text-[10px] font-semibold font-mono">
           <button
             onClick={() => setSelectedTab('today')}
@@ -111,7 +112,7 @@ export default function ScheduleWidget() {
         </div>
       </div>
 
-      {/* Şu An Yayında Olan Program Vitrini (Featured Card) */}
+      {/* şu an yayında olan program vitrini */}
       {currentProgram && (
         <div className="bg-stone-100/90 dark:bg-[#1c1815] p-3 rounded-xl border border-stone-300 dark:border-stone-800 mb-3 shadow-md dark:shadow-lg shrink-0 transition-colors duration-300">
           <div className="flex items-center justify-between mb-1">
@@ -135,7 +136,7 @@ export default function ScheduleWidget() {
             {currentProgram.desc}
           </p>
 
-          {/* Canlı İlerleme Çubuğu */}
+          {/* canlı ilerleme çubuğu */}
           <div className="mt-2.5">
             <div className="flex items-center justify-between text-[9px] text-stone-500 dark:text-stone-400 mb-1 font-mono">
               <span>{t('broadcastProgress')}</span>
@@ -151,7 +152,7 @@ export default function ScheduleWidget() {
         </div>
       )}
 
-      {/* Günün Tüm Akışı (Kaydırılabilir Liste) */}
+      {/* günün tüm akışı */}
       <div className="space-y-1.5 pr-1 max-h-48 overflow-y-auto custom-scrollbar">
         <div className="text-[10px] font-bold text-red-700 dark:text-red-400 uppercase tracking-wider mb-1 flex items-center justify-between sticky top-0 bg-[#fdfbf7] dark:bg-[#120e0c] py-0.5 z-10 font-mono transition-colors">
           <span>{t('dailyPrograms')}</span>
@@ -200,7 +201,7 @@ export default function ScheduleWidget() {
                 </div>
               </div>
 
-              {/* Tıklandığında açılan detay */}
+              {/* tıklandığında açılan detay */}
               {isExpanded && (
                 <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800/80 text-[11px] text-zinc-600 dark:text-zinc-400 space-y-1 animate-fadeIn">
                   <p className="leading-relaxed">{item.desc}</p>

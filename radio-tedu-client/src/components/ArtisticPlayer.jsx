@@ -3,67 +3,68 @@ import { AudioContext } from '../context/AudioContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 
-// Her kanal ve içeriğe özel dinamik renk paletleri
+// her kanal ve içeriğe özel dinamik renk paletleri
 const THEME_MAP = {
-  // Radyo İstasyonları
+  // radyo istasyonları
   'radiotedu-main': {
-    accent: '#E50914', // Radyo Kırmızısı
+    accent: '#E50914', 
     glow: 'rgba(229, 9, 20, 0.55)',
     ambient: 'rgba(229, 9, 20, 0.32)',
     tagBg: 'bg-red-500/20 text-red-400 border-red-500/30'
   },
   'radiotedu-classic': {
-    accent: '#D97706', // Asil Amber / Altın
+    accent: '#D97706', 
     glow: 'rgba(217, 119, 6, 0.55)',
     ambient: 'rgba(217, 119, 6, 0.32)',
     tagBg: 'bg-amber-500/20 text-amber-400 border-amber-500/30'
   },
   'radiotedu-jazz': {
-    accent: '#3B82F6', // Gece Mavisi / Caz İndigo
+    accent: '#3B82F6', 
     glow: 'rgba(59, 130, 246, 0.55)',
     ambient: 'rgba(59, 130, 246, 0.32)',
     tagBg: 'bg-blue-500/20 text-blue-400 border-blue-500/30'
   },
   'radiotedu-lofi': {
-    accent: '#10B981', // Zümrüt / Sakin Nane Yeşili
+    accent: '#10B981', 
     glow: 'rgba(16, 185, 129, 0.55)',
     ambient: 'rgba(16, 185, 129, 0.32)',
     tagBg: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
   },
   'radiotedu-rock': {
-    accent: '#A855F7', // Elektrik Mor / Rock Menekşesi
+    accent: '#A855F7', 
     glow: 'rgba(168, 85, 247, 0.55)',
     ambient: 'rgba(168, 85, 247, 0.32)',
     tagBg: 'bg-purple-500/20 text-purple-400 border-purple-500/30'
   },
   'radiotedu-energize': {
-    accent: '#F97316', // Neon Turuncu / Enerji
+    accent: '#F97316', 
     glow: 'rgba(249, 115, 22, 0.55)',
     ambient: 'rgba(249, 115, 22, 0.32)',
     tagBg: 'bg-orange-500/20 text-orange-400 border-orange-500/30'
   },
 
-  // Podcastler
+  // podcastler
   'ep-kadersel-asklar': {
-    accent: '#F43F5E', // Romantik Gül Pembesi
+    accent: '#F43F5E',
     glow: 'rgba(244, 63, 94, 0.55)',
     ambient: 'rgba(244, 63, 94, 0.32)',
     tagBg: 'bg-rose-500/20 text-rose-400 border-rose-500/30'
   },
   'ep-bpw-talks-1': {
-    accent: '#06B6D4', // Liderlik Camgöbeği
+    accent: '#06B6D4', 
     glow: 'rgba(6, 182, 212, 0.55)',
     ambient: 'rgba(6, 182, 212, 0.32)',
     tagBg: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
   },
   'ep-makrofinans-final': {
-    accent: '#14B8A6', // Finans Teali
+    accent: '#14B8A6', 
     glow: 'rgba(20, 184, 166, 0.55)',
     ambient: 'rgba(20, 184, 166, 0.32)',
     tagBg: 'bg-teal-500/20 text-teal-400 border-teal-500/30'
   }
 };
 
+// alt sabit oynatıcı barı: dinamik renk paleti, kapak ambient efekti, ekolayzır ve şarkı sözü penceresi
 export default function ArtisticPlayer() {
   const {
     currentTrack,
@@ -82,11 +83,11 @@ export default function ArtisticPlayer() {
   const { isDark } = useTheme();
   const { t, language } = useLanguage();
 
-  // Çalan parçaya/kanala ve şarkı kapağına göre dinamik renk paleti
+  // çalan parçaya ve şarkı kapağına göre dinamik renk paleti
   const palette = nowPlaying?.palette;
   const coverArtwork = nowPlaying?.artwork || currentTrack?.artwork;
   
-  // Albüm kapağından türetilen renkler (yoksa istasyonun kendi teması kullanılır)
+  // albüm kapağından türetilen renkler (yoksa istasyonun teması kullanılır)
   const activeAccent = palette?.vibrant || currentTrack?.theme?.accent || '#e50914';
   const activeGlow = palette?.vibrant ? `${palette.vibrant}88` : (currentTrack?.theme?.glow || 'rgba(229, 9, 20, 0.45)');
   
@@ -94,7 +95,7 @@ export default function ArtisticPlayer() {
   const avgRgb = palette?.avg_rgb || rgb;
   const isAccentLight = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000 > 150;
 
-  // Çalan şarkı ve sanatçı hesaplaması
+  // çalan şarkı ve sanatçı hesaplaması
   const hasLiveSong = Boolean(nowPlaying?.song && nowPlaying.song !== currentTrack?.title);
   const displayTitle = nowPlaying?.song || currentTrack?.title || "RadioTEDU";
   const displaySubtitle = (() => {
@@ -107,7 +108,7 @@ export default function ArtisticPlayer() {
     return currentTrack?.subtitle || currentTrack?.artist || t('defaultSubtitle');
   })();
 
-  // Şarkı Sözleri (Lyrics) durum ve ref yönetimi
+  // şarkı sözleri (lyrics) durum ve ref yönetimi
   const [showLyrics, setShowLyrics] = useState(false);
   const [isClosingLyrics, setIsClosingLyrics] = useState(false);
   const [lyricsData, setLyricsData] = useState(null);
@@ -140,7 +141,7 @@ export default function ArtisticPlayer() {
     }
   };
 
-  // Dışarıya tıklandığında pencerenin kapanması
+  // dışarıya tıklandığında pencerenin kapanması
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -166,6 +167,7 @@ export default function ArtisticPlayer() {
     };
   }, [showLyrics, isClosingLyrics]);
 
+  // backend api (/api/lyrics) üzerinden o an çalan parçanın sözlerini getiren fonksiyon
   const fetchLyrics = async (song, artist) => {
     if (!song) return;
     setLoadingLyrics(true);
@@ -204,7 +206,7 @@ export default function ArtisticPlayer() {
     }
   }, [showLyrics, nowPlaying?.song, displayTitle]);
 
-  // Dinamik arka plan stili (Kapağın rengini tüm player çubuğuna giydirir)
+  // dinamik arka plan stili (kapağın rengini player çubuğuna giydirir)
   const dynamicBackgroundStyle = (() => {
     if (coverArtwork) {
       if (isDark) {
@@ -232,7 +234,7 @@ export default function ArtisticPlayer() {
       }}
       className="h-24 shrink-0 w-full z-50 border-t border-white/20 dark:border-white/10 shadow-[0_-16px_48px_rgba(0,0,0,0.15)] dark:shadow-[0_-16px_48px_rgba(0,0,0,0.9)] backdrop-blur-3xl flex flex-col justify-between overflow-visible transition-colors duration-300 relative"
     >
-      {/* 1. KATMAN: Albüm Kapağının Renklerini Arkaya Yayan Derin Bulanık Ortam Katmanı (Apple Music / Spotify Tarzı) */}
+      {/* 1. katman: albüm kapağının renklerini arkaya yayan derin ortam katmanı */}
       {coverArtwork && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
           <img
@@ -246,7 +248,7 @@ export default function ArtisticPlayer() {
               opacity: isPlaying ? 0.75 : 0.45
             }}
           />
-          {/* Renk derinliğini zenginleştiren yarı saydam cam katmanı */}
+          {/* renk derinliğini zenginleştiren yarı saydam cam katmanı */}
           <div
             className="absolute inset-0 transition-colors duration-1000"
             style={{
@@ -259,7 +261,7 @@ export default function ArtisticPlayer() {
         </div>
       )}
 
-      {/* Üst Dinamik Neon Çizgi (Kapağın en canlı renginde parlar) */}
+      {/* üst dinamik neon çizgi */}
       <div
         className="w-full h-[2px] transition-all duration-700 relative z-10"
         style={{
@@ -271,10 +273,10 @@ export default function ArtisticPlayer() {
 
       <div className="flex-1 grid grid-cols-3 items-center px-4 sm:px-8 md:px-10 w-full relative z-10">
         
-        {/* SOL: Canlı Parça / Kanal Bilgisi & Albüm Kapağı (Sol Kenara Hizalı) */}
+        {/* sol: canlı parça ve albüm kapağı */}
         <div className="flex items-center gap-3.5 min-w-0 justify-start">
           
-          {/* Şarkının Gerçek Albüm Kapağı (Plak yerine modern köşeleri yuvarlatılmış albüm görseli) */}
+          {/* şarkının gerçek albüm kapağı */}
           <div className="relative group shrink-0">
             <div
               className={`w-14 h-14 rounded-xl overflow-hidden transition-all duration-500 shadow-md border relative ${
@@ -302,7 +304,7 @@ export default function ArtisticPlayer() {
                 </div>
               )}
 
-              {/* Çalma durumu mikro equalizer göstergesi */}
+              {/* çalma durumu mikro equalizer göstergesi */}
               {isPlaying && (
                 <div className="absolute bottom-1 right-1 px-1 py-0.5 rounded-md bg-black/60 backdrop-blur-md flex items-center gap-0.5 shadow-sm">
                   <span className="w-0.5 h-2 bg-white rounded-full animate-[bounce_0.8s_infinite_100ms]" />
@@ -341,11 +343,11 @@ export default function ArtisticPlayer() {
           </div>
         </div>
 
-        {/* ORTA: Konsol Kontrolleri & Canlı Frekans / Ekolayzır Dalgaları (Tam 50% Ortalanmış) */}
+        {/* orta: konsol kontrolleri ve ekolayzır dalgaları */}
         <div className="flex flex-col items-center justify-center gap-1.5 justify-self-center">
-          {/* Kontrol Butonları */}
+          {/* kontrol butonları */}
           <div className="flex items-center gap-4">
-            {/* Önceki İstasyon */}
+            {/* önceki istasyon */}
             <button
               onClick={prevStation}
               className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-800 hover:text-black dark:text-zinc-200 dark:hover:text-white bg-white/30 hover:bg-white/50 dark:bg-black/40 dark:hover:bg-black/60 border border-white/30 dark:border-white/10 backdrop-blur-md transition-all duration-150 active:scale-90 cursor-pointer shadow-sm"
@@ -356,7 +358,7 @@ export default function ArtisticPlayer() {
               </svg>
             </button>
 
-            {/* Ana Oynat / Durdur Butonu (Kapağın Rengine Göre Dinamik Işık & Parlama) */}
+            {/* ana oynat / durdur butonu */}
             <div className="relative flex items-center justify-center">
               {isPlaying && (
                 <span
@@ -389,7 +391,7 @@ export default function ArtisticPlayer() {
                     </svg>
                   ) : (
                     <>
-                      {/* Oynat İkonu */}
+                      {/* oynat ikonu */}
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
@@ -403,7 +405,7 @@ export default function ArtisticPlayer() {
                         <path d="M8.45 5.25C7.76 4.85 6.95 5.35 6.95 6.15v11.7c0 .8.81 1.3 1.5.9l10.25-5.85c.67-.4.67-1.4 0-1.8L8.45 5.25z" />
                       </svg>
 
-                      {/* Duraklat İkonu */}
+                      {/* duraklat ikonu */}
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
@@ -423,7 +425,7 @@ export default function ArtisticPlayer() {
               </button>
             </div>
 
-            {/* Sonraki İstasyon */}
+            {/* sonraki istasyon */}
             <button
               onClick={nextStation}
               className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-800 hover:text-black dark:text-zinc-200 dark:hover:text-white bg-white/30 hover:bg-white/50 dark:bg-black/40 dark:hover:bg-black/60 border border-white/30 dark:border-white/10 backdrop-blur-md transition-all duration-150 active:scale-90 cursor-pointer shadow-sm"
@@ -435,7 +437,7 @@ export default function ArtisticPlayer() {
             </button>
           </div>
 
-          {/* Dinamik Ekolayzır Çubukları (Kapağın Renginde Dans Eder) */}
+          {/* dinamik ekolayzır çubukları */}
           <div className="flex items-end justify-center gap-1 h-5 px-3">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
               <span
@@ -453,10 +455,10 @@ export default function ArtisticPlayer() {
           </div>
         </div>
 
-        {/* SAĞ: Ses Kontrolü & Stüdyo Detayları (Sağ Kenara Hizalı) */}
+        {/* sağ: ses kontrolü ve stüdyo detayları */}
         <div className="flex items-center justify-end gap-3 sm:gap-4 min-w-0 justify-self-end relative">
           
-          {/* Şarkı Sözleri (Lyrics) İkon Butonu - 39.93°N / 32.85°E Solunda */}
+          {/* şarkı sözleri (lyrics) ikon butonu */}
           <button
             ref={lyricsBtnRef}
             onClick={toggleLyrics}
@@ -476,13 +478,13 @@ export default function ArtisticPlayer() {
             </svg>
           </button>
 
-          {/* Stüdyo Koordinat / Canlı Frekans Damgası */}
+          {/* stüdyo koordinat damgası */}
           <div className="text-right hidden sm:block">
             <span className="text-[10px] text-zinc-700 dark:text-zinc-400 tracking-wider block font-mono font-medium drop-shadow-sm">{t('ankara')}</span>
             <span className="text-[11px] text-zinc-900 dark:text-zinc-200 font-semibold font-mono drop-shadow-sm">39.93°N / 32.85°E</span>
           </div>
 
-          {/* Ses Ayar Çubuğu (Kapağın Rengi İle Uyumlu) */}
+          {/* ses ayar çubuğu */}
           <div className="flex items-center gap-2">
             <button
               onClick={toggleMute}
@@ -523,7 +525,7 @@ export default function ArtisticPlayer() {
 
       </div>
 
-      {/* ŞARKISÖZLERİ (LYRICS) AÇILIR PENCERESİ (POPUP) */}
+      {/* şarkı sözleri (lyrics) açılır penceresi */}
       {(showLyrics || isClosingLyrics) && (
         <div
           ref={lyricsRef}
@@ -531,7 +533,7 @@ export default function ArtisticPlayer() {
             isClosingLyrics ? 'animate-popup-out' : 'animate-popup-in'
           }`}
         >
-          {/* Header */}
+          {/* header */}
           <div className="flex items-center justify-between pb-3 border-b border-black/10 dark:border-white/10 mb-3 shrink-0">
             <div className="flex items-center gap-2.5 min-w-0">
               <div
@@ -566,7 +568,7 @@ export default function ArtisticPlayer() {
             </button>
           </div>
 
-          {/* Content Body */}
+          {/* içerik alanı */}
           <div className="flex-1 overflow-y-auto max-h-60 pr-2 text-xs sm:text-sm leading-relaxed scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700 select-text">
             {loadingLyrics ? (
               <div className="flex flex-col items-center justify-center py-10 gap-3 text-zinc-500 dark:text-zinc-400">
@@ -598,7 +600,7 @@ export default function ArtisticPlayer() {
             )}
           </div>
 
-          {/* Footer note */}
+          {/* dipnot */}
           {lyricsData?.source && (
             <div className="mt-3 pt-2 border-t border-black/5 dark:border-white/5 text-[10px] text-zinc-400 dark:text-zinc-500 flex items-center justify-between shrink-0 font-mono">
               <span>KAYNAK: {lyricsData.source.toUpperCase()}</span>

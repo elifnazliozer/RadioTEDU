@@ -3,9 +3,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-radio-dark: #120e0c;   /* Vintage Koyu Maun Ahşap */   
-  --color-radio-card: #1c1714;   /* Koyu Ahşap Amfi Kartı */   
-  --color-radio-accent: #d97706; /* Sıcak Kehribar / Amber */  
+  --color-radio-dark: #120e0c;   /* vintage koyu maun ahşap */   
+  --color-radio-card: #1c1714;   /* koyu ahşap amfi kartı */   
+  --color-radio-accent: #d97706; /* sıcak kehribar / amber */  
 }
 
 html, body {
@@ -26,7 +26,7 @@ html.light, html.light body {
   color: #261c16;
 }
 
-/* RadioTEDU Vibe - Özel İnce Koyu Kaydırma Çubuğu (Scrollbar) */
+/* radioTEDU vibe - özel ince koyu kaydırma çubuğu */
 * {
   scrollbar-width: thin;
   scrollbar-color: #27272a transparent;
@@ -67,7 +67,7 @@ html.light ::-webkit-scrollbar-track {
   height: 0;
 }
 
-/* Özel Akış Scrollbar */
+/* özel akış scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 5px;
 }
@@ -82,7 +82,7 @@ html.light ::-webkit-scrollbar-track {
   background: #e50914;
 }
 
-/* Ekolayzır / Frekans Animasyonları */
+/* ekolayzır / frekans animasyonları */
 @keyframes eqBounce {
   0%, 100% { height: 4px; }
   50% { height: 22px; }
@@ -97,7 +97,7 @@ html.light ::-webkit-scrollbar-track {
 .animate-eq-7 { animation: eqBounce 1.3s ease-in-out infinite 0.25s; }
 .animate-eq-8 { animation: eqBounce 1.0s ease-in-out infinite 0.35s; }
 
-/* Kampüs Duvarı Canlı Ticker Animasyonu */
+/* kampüs duvarı canlı ticker animasyonu */
 @keyframes tickerSlide {
   0% { transform: translate3d(0, 0, 0); }
   100% { transform: translate3d(-50%, 0, 0); }
@@ -114,7 +114,7 @@ html.light ::-webkit-scrollbar-track {
   animation-play-state: paused;
 }
 
-/* Native View Transition Yönlü Tema Geçişi (Ultra-Smooth Hardware Accelerated) */
+/* native view transition yönlü tema geçişi */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
@@ -131,12 +131,12 @@ html.light ::-webkit-scrollbar-track {
   z-index: 2;
 }
 
-/* Dark -> Light: Soldan Sağa (LTR) Seri ve Yağ Gibi Açılma */
+/* dark -> light: soldan sağa (ltr) geçiş */
 html[data-theme-direction="ltr"]::view-transition-new(root) {
   animation: revealLTR 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* Light -> Dark: Sağdan Sola (RTL) Seri ve Yağ Gibi Açılma */
+/* light -> dark: sağdan sola (rtl) geçiş */
 html[data-theme-direction="rtl"]::view-transition-new(root) {
   animation: revealRTL 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
@@ -159,7 +159,7 @@ html[data-theme-direction="rtl"]::view-transition-new(root) {
   }
 }
 
-/* Şarkı Sözleri (Lyrics) Popup Yumuşak Açılış & Kapanış Animasyonları */
+/* şarkı sözleri (lyrics) popup açılış ve kapanış animasyonları */
 @keyframes lyricsPopupIn {
   0% {
     opacity: 0;
