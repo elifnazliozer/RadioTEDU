@@ -1,11 +1,11 @@
 import React, { createContext, useState, useEffect, useRef } from 'react';
 import { STATIONS } from '../data/radioData';
 
-// ses motorunu ve yayin kanallarini yoneten context
+// html5 Audio motorunu, canlı yayın kanallarını ve oynatma durumlarını tüm uygulamaya sağlayan Context
 export const AudioContext = createContext();
 
 export const AudioProvider = ({ children }) => {
-  // player state'leri
+  // oynatıcının durum değişkenleri (aktif radyo/podcast, oynatma, yüklenme, ses seviyesi)
   const [currentTrack, setCurrentTrack] = useState(STATIONS[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -16,7 +16,7 @@ export const AudioProvider = ({ children }) => {
   const audioRef = useRef(null);
   const isChangingStreamRef = useRef(false);
 
-  // emniyet zamanlayıcısı: 4 saniyeden fazla yüklemede kalırsa yüklemeyi kapatır
+  // emniyet zamanlayıcısı: 4 saniyeden fazla yüklemede kalırsa ve çalmaya başlamadıysa yüklemeyi kapatır
   useEffect(() => {
     let timer;
     if (isLoading && !isPlaying) {
@@ -69,7 +69,7 @@ export const AudioProvider = ({ children }) => {
     };
   }, []);
 
-  // canlı şarkı metaverisi çekimi
+  // canlı şarkı metaverisi (Now Playing) çekimi
   useEffect(() => {
     let isMounted = true;
 
@@ -103,7 +103,7 @@ export const AudioProvider = ({ children }) => {
     };
   }, [currentTrack]);
 
-  // kurşungeçirmez oynatma motoru
+  // oynatma motoru
   const executePlay = async (trackToPlay) => {
     const audio = audioRef.current;
     if (!audio || !trackToPlay) return;
@@ -165,7 +165,7 @@ export const AudioProvider = ({ children }) => {
     }
   };
 
-  // secilen parcayi calan fn
+  // seçilen parçayı/kanalı çalma fonksiyonu
   const playTrack = (track) => {
     if (!track) return;
     if (currentTrack?.id === track.id && isPlaying) {
@@ -175,7 +175,7 @@ export const AudioProvider = ({ children }) => {
     executePlay(track);
   };
 
-  // play/pause toggle fn
+  // oynat/duraklat durumunu değiştiren fonksiyon
   const togglePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -189,7 +189,7 @@ export const AudioProvider = ({ children }) => {
     }
   };
 
-  // ses seviyesini ayarlar (0 ile 1 arasi)
+  // ses seviyesini ayarlayan fonksiyon (0.0 - 1.0)
   const setVolume = (val) => {
     setVolumeState(val);
     if (audioRef.current) {
@@ -200,7 +200,7 @@ export const AudioProvider = ({ children }) => {
     }
   };
 
-  // mute toggle
+  // sesi açma/kapatma (Mute/Unmute) fonksiyonu
   const toggleMute = () => {
     if (audioRef.current) {
       audioRef.current.muted = !isMuted;
@@ -208,14 +208,14 @@ export const AudioProvider = ({ children }) => {
     setIsMuted(!isMuted);
   };
 
-  // sonraki istasyon
+  // sonraki radyoya geçiş fonksiyonu
   const nextStation = () => {
     const currentIndex = STATIONS.findIndex(s => s.id === currentTrack.id);
     const nextIdx = (currentIndex + 1) % STATIONS.length;
     playTrack(STATIONS[nextIdx]);
   };
 
-  // onceki istasyon
+  // önceki radyoya geçiş fonksiyonu
   const prevStation = () => {
     const currentIndex = STATIONS.findIndex(s => s.id === currentTrack.id);
     const prevIdx = (currentIndex - 1 + STATIONS.length) % STATIONS.length;

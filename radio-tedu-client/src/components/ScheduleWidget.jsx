@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { WEEKDAY_SCHEDULE, WEEKEND_SCHEDULE } from '../data/scheduleData';
 import { useLanguage } from '../context/LanguageContext';
 
-// canlı yayın akışı bileşeni: anlık saat dilimine göre canlı yayındaki programı ve günlük akışı sunar
+// canlı yayın akışı bileşeni (ScheduleWidget), anlık saat dilimine göre canlı yayındaki programı ilerleme yüzdesini ve günlük akışı sunar
 export default function ScheduleWidget() {
   const { t } = useLanguage();
   const [selectedTab, setSelectedTab] = useState('today'); // 'today', 'weekday', 'weekend'
@@ -20,15 +20,15 @@ export default function ScheduleWidget() {
   const dayOfWeek = currentTime.getDay(); // 0 = pazar, 6 = cumartesi
   const isWeekendNow = dayOfWeek === 0 || dayOfWeek === 6;
 
-  // hangi liste gösterilecek
+  // hangi liste gösterilecek sorusuna cevap vermek için
   let activeList = WEEKDAY_SCHEDULE;
   if (selectedTab === 'weekend' || (selectedTab === 'today' && isWeekendNow)) {
     activeList = WEEKEND_SCHEDULE;
   }
 
-  // şu anki programa göre eşleştirme yap
+  // şu anki programa göre eşleştirme yapmak için
   const currentProgram = activeList.find((prog) => {
-    // gece yarısını aşan saatler için kontrol
+    // 22:00 - 02:00 gibi gece yarısını aşan saatler için kontrol
     if (prog.endHour > 24) {
       if (currentHour >= prog.startHour || currentHour < prog.endHour - 24) {
         return true;
@@ -39,7 +39,7 @@ export default function ScheduleWidget() {
     return false;
   }) || activeList[0];
 
-  // programın yüzde kaçının tamamlandığını hesapla
+  // programın yüzde kaçının tamamlandığını hesaplamak
   let progressPercent = 50;
   if (currentProgram) {
     const startMins = currentProgram.startHour * 60;
@@ -112,7 +112,7 @@ export default function ScheduleWidget() {
         </div>
       </div>
 
-      {/* şu an yayında olan program vitrini */}
+      {/* şu an yayında olan program vitrini (Featured Card) */}
       {currentProgram && (
         <div className="bg-stone-100/90 dark:bg-[#1c1815] p-3 rounded-xl border border-stone-300 dark:border-stone-800 mb-3 shadow-md dark:shadow-lg shrink-0 transition-colors duration-300">
           <div className="flex items-center justify-between mb-1">
@@ -152,7 +152,7 @@ export default function ScheduleWidget() {
         </div>
       )}
 
-      {/* günün tüm akışı */}
+      {/* günün tüm akışı kaydırılabilir liste */}
       <div className="space-y-1.5 pr-1 max-h-48 overflow-y-auto custom-scrollbar">
         <div className="text-[10px] font-bold text-red-700 dark:text-red-400 uppercase tracking-wider mb-1 flex items-center justify-between sticky top-0 bg-[#fdfbf7] dark:bg-[#120e0c] py-0.5 z-10 font-mono transition-colors">
           <span>{t('dailyPrograms')}</span>

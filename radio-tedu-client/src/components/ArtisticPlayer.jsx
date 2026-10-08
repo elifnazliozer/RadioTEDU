@@ -45,7 +45,7 @@ const THEME_MAP = {
 
   // podcastler
   'ep-kadersel-asklar': {
-    accent: '#F43F5E',
+    accent: '#F43F5E', 
     glow: 'rgba(244, 63, 94, 0.55)',
     ambient: 'rgba(244, 63, 94, 0.32)',
     tagBg: 'bg-rose-500/20 text-rose-400 border-rose-500/30'

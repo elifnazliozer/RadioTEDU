@@ -6,8 +6,8 @@ import { AudioProvider } from './context/AudioContext.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 import { LanguageProvider } from './context/LanguageContext.jsx'
 
-// react giris noktasi
-// dil, tema ve ses provider'lari burda baglaniyo
+// react giriş noktası
+// dil, tema ve ses provider'ları burda bağlanıyor
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <LanguageProvider>
