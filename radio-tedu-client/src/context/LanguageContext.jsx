@@ -115,7 +115,10 @@ export const translations = {
     lyricsButton: "Şarkı Sözleri (Lyrics)",
     closeLyrics: "Sözleri Kapat",
     miniPlayerButton: "Mini Oyuncu (Mini Player)",
-    miniPlayerTitle: "RadioTEDU Mini Player"
+    miniPlayerTitle: "RadioTEDU Mini Player",
+    miniPlay: "Oynat",
+    miniPause: "Duraklat",
+    listenOnSpotify: "Spotify'da Dinle"
   },
   en: {
     // header
@@ -230,7 +233,10 @@ export const translations = {
     lyricsButton: "Song Lyrics",
     closeLyrics: "Close Lyrics",
     miniPlayerButton: "Mini Player (Picture-in-Picture)",
-    miniPlayerTitle: "RadioTEDU Mini Player"
+    miniPlayerTitle: "RadioTEDU Mini Player",
+    miniPlay: "Play",
+    miniPause: "Pause",
+    listenOnSpotify: "Listen on Spotify"
   }
 };
 
