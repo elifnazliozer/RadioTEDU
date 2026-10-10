@@ -65,6 +65,12 @@ const THEME_MAP = {
   }
 };
 
+// '#rrggbb' -> [r, g, b]
+const hexToRgb = (hex) => {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(hex || '');
+  return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : null;
+};
+
 // alt sabit oynatıcı barı: dinamik renk paleti, kapak ambient efekti, ekolayzır ve şarkı sözü penceresi
 export default function ArtisticPlayer() {
   const {
@@ -72,7 +78,6 @@ export default function ArtisticPlayer() {
     isPlaying,
     isLoading,
     togglePlay,
-    playTrack,
     volume,
     setVolume,
     isMuted,
@@ -83,22 +88,24 @@ export default function ArtisticPlayer() {
   } = useContext(AudioContext);
 
   const { isDark } = useTheme();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   // çalan parçaya ve şarkı kapağına göre dinamik renk paleti
   const palette = nowPlaying?.palette;
   const coverArtwork = nowPlaying?.artwork || currentTrack?.artwork;
   
   // albüm kapağından türetilen renkler (yoksa istasyonun teması kullanılır)
-  const activeAccent = palette?.vibrant || currentTrack?.theme?.accent || '#e50914';
-  const activeGlow = palette?.vibrant ? `${palette.vibrant}88` : (currentTrack?.theme?.glow || 'rgba(229, 9, 20, 0.45)');
-  
-  const rgb = palette?.rgb || (currentTrack?.theme?.accent === '#e50914' ? [229, 9, 20] : [200, 30, 30]);
+  const stationTheme = currentTrack?.theme || THEME_MAP[currentTrack?.id];
+  const activeAccent = palette?.vibrant || stationTheme?.accent || '#e50914';
+  const activeGlow = palette?.vibrant ? `${palette.vibrant}88` : (stationTheme?.glow || 'rgba(229, 9, 20, 0.45)');
+
+  const rgb = palette?.rgb || hexToRgb(stationTheme?.accent) || [229, 9, 20];
   const avgRgb = palette?.avg_rgb || rgb;
-  const isAccentLight = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000 > 150;
+  // vurgu renginin kendisi açık mı (üstündeki ikon/yazı rengi buna göre seçilir)
+  const accentRgb = palette?.vibrant_rgb || hexToRgb(activeAccent) || rgb;
+  const isAccentLight = (accentRgb[0] * 299 + accentRgb[1] * 587 + accentRgb[2] * 114) / 1000 > 150;
 
   // çalan şarkı ve sanatçı hesaplaması
-  const hasLiveSong = Boolean(nowPlaying?.song && nowPlaying.song !== currentTrack?.title);
   const displayTitle = nowPlaying?.song || currentTrack?.title || "RadioTEDU";
   const displaySubtitle = (() => {
     if (nowPlaying?.artist) {
@@ -172,9 +179,13 @@ export default function ArtisticPlayer() {
     };
   }, [showLyrics, isClosingLyrics]);
 
+  // şarkı hızlı değişirse eski isteğin cevabı yenisinin üstüne yazılmasın
+  const lyricsRequestRef = useRef(0);
+
   // backend api (/api/lyrics) üzerinden o an çalan parçanın sözlerini getiren fonksiyon
   const fetchLyrics = async (song, artist) => {
     if (!song) return;
+    const requestId = ++lyricsRequestRef.current;
     setLoadingLyrics(true);
     setLyricsError(null);
     try {
@@ -182,8 +193,10 @@ export default function ArtisticPlayer() {
       const cleanArtist = artist || nowPlaying?.artist || '';
       const cleanSong = song || nowPlaying?.song || displayTitle;
       const res = await fetch(`${backendUrl}/api/lyrics?song=${encodeURIComponent(cleanSong)}&artist=${encodeURIComponent(cleanArtist)}`);
+      if (requestId !== lyricsRequestRef.current) return;
       if (res.ok) {
         const data = await res.json();
+        if (requestId !== lyricsRequestRef.current) return;
         setLyricsData(data);
         if (data.error || (!data.lyrics && !data.is_jingle)) {
           setLyricsError(t('lyricsNotFound'));
@@ -192,10 +205,11 @@ export default function ArtisticPlayer() {
         setLyricsError(t('lyricsNotFound'));
       }
     } catch (err) {
+      if (requestId !== lyricsRequestRef.current) return;
       console.error("Lyrics fetch error:", err);
       setLyricsError(t('lyricsNotFound'));
     } finally {
-      setLoadingLyrics(false);
+      if (requestId === lyricsRequestRef.current) setLoadingLyrics(false);
     }
   };
 
@@ -374,7 +388,8 @@ export default function ArtisticPlayer() {
               <button
                 onClick={togglePlay}
                 style={{
-                  backgroundColor: isPlaying ? activeAccent : (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.9)'),
+                  // çalmıyorken önceki/sonraki butonlarıyla aynı zemin (sınıflardan gelir)
+                  backgroundColor: isPlaying ? activeAccent : undefined,
                   boxShadow: isPlaying
                     ? `0 0 24px ${activeGlow}, 0 4px 14px rgba(0,0,0,0.35)`
                     : '0 4px 14px rgba(0,0,0,0.12)',
@@ -382,8 +397,8 @@ export default function ArtisticPlayer() {
                 }}
                 className={`relative w-12 h-12 rounded-full flex items-center justify-center cursor-pointer transition-transform hover:scale-105 active:scale-95 border backdrop-blur-md ${
                   isPlaying
-                    ? 'border-white/30 text-white hover:brightness-110 shadow-lg'
-                    : 'border-white/40 dark:border-white/10 text-zinc-900 dark:text-white hover:bg-white dark:hover:bg-white/20 shadow-md'
+                    ? `border-white/30 hover:brightness-110 shadow-lg ${isAccentLight ? 'text-zinc-900' : 'text-white'}`
+                    : 'bg-white/30 hover:bg-white/50 dark:bg-black/40 dark:hover:bg-black/60 border-white/30 dark:border-white/10 text-zinc-800 hover:text-black dark:text-zinc-200 dark:hover:text-white shadow-sm'
                 }`}
                 title={isPlaying ? t('pause') : t('play')}
                 aria-label={isPlaying ? t('pause') : t('play')}
@@ -466,8 +481,10 @@ export default function ArtisticPlayer() {
           {/* mini player (picture-in-picture) pencere ikon butonu */}
           <button
             onClick={() => setIsMiniPlayerOpen(!isMiniPlayerOpen)}
-            className={`p-1.5 rounded-lg text-zinc-800 hover:text-black dark:text-zinc-100 dark:hover:text-white bg-transparent border-0 transition-all duration-200 cursor-pointer flex items-center justify-center hover:scale-110 active:scale-90 drop-shadow-sm ${
-              isMiniPlayerOpen ? 'opacity-100 scale-110 text-emerald-500 dark:text-emerald-400' : 'opacity-80 hover:opacity-100'
+            className={`p-1.5 rounded-lg bg-transparent border-0 transition-all duration-200 cursor-pointer flex items-center justify-center hover:scale-110 active:scale-90 drop-shadow-sm ${
+              isMiniPlayerOpen
+                ? 'opacity-100 scale-110 text-emerald-500 dark:text-emerald-400'
+                : 'opacity-80 hover:opacity-100 text-zinc-800 hover:text-black dark:text-zinc-100 dark:hover:text-white'
             }`}
             title={t('miniPlayerButton')}
             aria-label={t('miniPlayerButton')}
@@ -521,7 +538,8 @@ export default function ArtisticPlayer() {
                   viewBox="0 0 24 24"
                   fill="currentColor"
                   className="w-5 h-5 transition-colors duration-500"
-                  style={{ color: activeAccent }}
+                  // açık vurgu renginde ikon zeminde kaybolmasın: o zaman normal yazı rengi kalır
+                  style={isAccentLight ? undefined : { color: activeAccent }}
                 >
                   <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.5A2.25 2.25 0 0 0 2.25 9.75v4.5A2.25 2.25 0 0 0 4.5 16.5h1.94l4.5 4.5c.944.945 2.56.276 2.56-1.06V4.06ZM17.78 9.22a.75.75 0 1 0-1.06 1.06L18.44 12l-1.72 1.72a.75.75 0 0 0 1.06 1.06l1.72-1.72 1.72 1.72a.75.75 0 1 0 1.06-1.06L20.56 12l1.72-1.72a.75.75 0 0 0-1.06-1.06l-1.72 1.72-1.72-1.72Z" />
                 </svg>
@@ -617,7 +635,7 @@ export default function ArtisticPlayer() {
                     onClick={() => fetchLyrics(nowPlaying.song, nowPlaying.artist)}
                     className="mt-2 text-xs px-3 py-1.5 rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20 transition-colors text-zinc-800 dark:text-zinc-200 font-medium cursor-pointer"
                   >
-                    Tekrar Dene
+                    {t('lyricsRetry')}
                   </button>
                 )}
               </div>
@@ -627,7 +645,7 @@ export default function ArtisticPlayer() {
           {/* dipnot */}
           {lyricsData?.source && (
             <div className="mt-3 pt-2 border-t border-black/5 dark:border-white/5 text-[10px] text-zinc-400 dark:text-zinc-500 flex items-center justify-between shrink-0 font-mono">
-              <span>KAYNAK: {lyricsData.source.toUpperCase()}</span>
+              <span>{t('lyricsSource')}: {lyricsData.source.toUpperCase()}</span>
               {lyricsData?.artist && <span className="truncate max-w-[150px] font-semibold">{lyricsData.artist}</span>}
             </div>
           )}
@@ -641,19 +659,10 @@ export default function ArtisticPlayer() {
         currentTrack={currentTrack}
         nowPlaying={nowPlaying}
         isPlaying={isPlaying}
-        isLoading={isLoading}
         togglePlay={togglePlay}
-        playTrack={playTrack}
         prevStation={prevStation}
         nextStation={nextStation}
-        volume={volume}
-        setVolume={setVolume}
-        isMuted={isMuted}
-        toggleMute={toggleMute}
-        activeAccent={activeAccent}
-        activeGlow={activeGlow}
         rgb={rgb}
-        avgRgb={avgRgb}
         t={t}
       />
     </footer>

@@ -1,29 +1,35 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useId } from 'react';
 import ReactDOM from 'react-dom';
 
+const SPOTIFY_GREEN = '#1db954';
+
 /**
- * Kayan Yazı (Marquee) Şarkı Başlık Bileşeni.
+ * Taşan şarkı adını fare üstündeyken sağdan sola kaydıran başlık.
+ * active: dışarıdan tetikleme (fare pencerenin herhangi bir yerinde). Alçak PiP
+ * penceresinde Chrome'un üst çubuğu başlığın üstüne bindiği için sadece
+ * başlığın kendi hover'ına güvenilemiyor.
  */
-function ScrollableTitle({ title, artist, fontSize = '15px', fontWeight = 600, color = '#ffffff' }) {
+function ScrollableTitle({ title, fontSize, lineHeight, active = false }) {
   const containerRef = useRef(null);
   const contentRef = useRef(null);
+  const [isSelfHovered, setIsSelfHovered] = useState(false);
   const [translateX, setTranslateX] = useState(0);
   const [transitionDuration, setTransitionDuration] = useState('0.5s');
 
-  const handleMouseEnter = () => {
-    if (containerRef.current && contentRef.current) {
+  const shouldScroll = active || isSelfHovered;
+
+  useEffect(() => {
+    if (shouldScroll && containerRef.current && contentRef.current) {
       const overflow = contentRef.current.scrollWidth - containerRef.current.clientWidth;
       if (overflow > 0) {
         setTransitionDuration(`${Math.max(1.8, overflow / 35)}s`);
         setTranslateX(-overflow - 6);
       }
+    } else {
+      setTransitionDuration('0.5s');
+      setTranslateX(0);
     }
-  };
-
-  const handleMouseLeave = () => {
-    setTransitionDuration('0.5s');
-    setTranslateX(0);
-  };
+  }, [shouldScroll, title]);
 
   const maskImage = translateX < 0
     ? 'linear-gradient(to right, transparent 0%, black 16px, black calc(100% - 22px), transparent 100%)'
@@ -32,49 +38,82 @@ function ScrollableTitle({ title, artist, fontSize = '15px', fontWeight = 600, c
   return (
     <div
       ref={containerRef}
-      className="overflow-hidden whitespace-nowrap min-w-0 w-full relative cursor-pointer"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      title={`${title} • ${artist}`}
-      style={{
-        maskImage,
-        WebkitMaskImage: maskImage
-      }}
+      className="overflow-hidden whitespace-nowrap min-w-0 w-full"
+      onMouseEnter={() => setIsSelfHovered(true)}
+      onMouseLeave={() => setIsSelfHovered(false)}
+      title={title}
+      style={{ maskImage, WebkitMaskImage: maskImage }}
     >
       <h3
         ref={contentRef}
-        className="song-title inline-block whitespace-nowrap will-change-transform drop-shadow-xs"
+        className="inline-block whitespace-nowrap will-change-transform drop-shadow-xs"
         style={{
           fontFamily: "'Circular Std', 'Poppins', 'Plus Jakarta Sans', sans-serif",
           fontSize,
-          fontWeight,
-          color,
+          fontWeight: 700,
+          lineHeight,
+          color: '#ffffff',
           letterSpacing: '-0.4px',
           transform: `translateX(${translateX}px)`,
           transition: `transform ${transitionDuration} linear`
         }}
       >
-        {title} <span className="mx-1 font-extrabold opacity-75">•</span> {artist}
+        {title}
       </h3>
     </div>
   );
 }
 
 /**
+ * Kapak renginden Spotify tarzı zemin rengi üretir:
+ * tonu korur, rengi koyulaştırır ve doygunluğu artırır (gri kapaklar gri kalır).
+ */
+function toSpotifyBg([r, g, b]) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h /= 6;
+  }
+  const newS = s < 0.08 ? s : Math.min(0.85, Math.max(s, 0.5));
+  const newL = Math.max(0.14, Math.min(l, 0.3));
+  if (newS === 0) {
+    const v = Math.round(newL * 255);
+    return [v, v, v];
+  }
+  const hue2rgb = (p, q, t) => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  };
+  const q = newL < 0.5 ? newL * (1 + newS) : newL + newS - newL * newS;
+  const p = 2 * newL - q;
+  return [hue2rgb(p, q, h + 1 / 3), hue2rgb(p, q, h), hue2rgb(p, q, h - 1 / 3)].map((v) => Math.round(v * 255));
+}
+
+/**
  * Spotify Bağlantı İkonu.
  */
-function SpotifyLink({ url, title, className = "w-4 h-4", isLight = false }) {
+function SpotifyLink({ url, title, size }) {
   return (
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className={`no-drag shrink-0 p-0.5 rounded-full transition-all cursor-pointer flex items-center justify-center hover:scale-110 active:scale-95 ${
-        isLight ? 'text-zinc-900 hover:text-black hover:bg-black/10' : 'text-[#1db954] hover:text-[#1ed760] hover:bg-white/10'
-      }`}
+      className="shrink-0 rounded-full transition-transform cursor-pointer flex items-center justify-center hover:scale-110 active:scale-95"
+      style={{ color: SPOTIFY_GREEN }}
       title={title}
     >
-      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141 C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
       </svg>
     </a>
@@ -84,10 +123,10 @@ function SpotifyLink({ url, title, className = "w-4 h-4", isLight = false }) {
 /**
  * Önceki İstasyon İkonu (|◀).
  */
-function PrevIcon({ className = "w-4 h-4" }) {
+function PrevIcon({ size }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M6 6h2.5v12H6V6zm3.5 6l8.5 6V6l-8.5 6z" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round">
+      <path d="M6.5 6.5h1.5v11H6.5zM10 12l7.5 5.25V6.75z" />
     </svg>
   );
 }
@@ -95,10 +134,32 @@ function PrevIcon({ className = "w-4 h-4" }) {
 /**
  * Sonraki İstasyon İkonu (▶|).
  */
-function NextIcon({ className = "w-4 h-4" }) {
+function NextIcon({ size }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M15.5 6H18v12h-2.5V6zM5.5 18l8.5-6-8.5-6v12z" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round">
+      <path d="M16 6.5h1.5v11H16zM14 12L6.5 6.75v10.5z" />
+    </svg>
+  );
+}
+
+/**
+ * Oynat/Duraklat Butonu Görseli (beyaz daire, ikon içi oyuk).
+ */
+function PlayPauseGlyph({ isPlaying }) {
+  // ikon daireden maske ile oyulur: üçgen/çubukların içi şeffaf kalır, arkası görünür
+  const maskId = `pp-mask-${useId().replace(/:/g, '')}`;
+  return (
+    <svg className="w-full h-full block" viewBox="0 0 24 24" shapeRendering="geometricPrecision">
+      <mask id={maskId}>
+        <circle cx="12" cy="12" r="11.6" fill="#ffffff" />
+        {isPlaying ? (
+          <path fill="#000000" stroke="#000000" strokeWidth="0.6" strokeLinejoin="round" d="M8.75 7.5h2.25v9H8.75zM13 7.5h2.25v9H13z" />
+        ) : (
+          <path fill="#000000" stroke="#000000" strokeWidth="1.2" strokeLinejoin="round" d="M9.75 7.5v9l7-4.5z" />
+        )}
+      </mask>
+      {/* yarıçap 12 değil 11.6: kenar yumuşatması SVG sınırında kesilmesin */}
+      <circle cx="12" cy="12" r="11.6" fill="#ffffff" mask={`url(#${maskId})`} />
     </svg>
   );
 }
@@ -116,11 +177,11 @@ export default function MiniPlayer({
   prevStation,
   nextStation,
   rgb = [229, 9, 20],
-  avgRgb = [150, 15, 15],
   t = (key) => key
 }) {
+  const isSupported = 'documentPictureInPicture' in window;
   const [pipWindow, setPipWindow] = useState(null);
-  const [isSupported, setIsSupported] = useState(true);
+  const [isHovering, setIsHovering] = useState(false);
   const [windowDimensions, setWindowDimensions] = useState({ width: 420, height: 500 });
 
   const displayTitle = nowPlaying?.song || currentTrack?.title || "RadioTEDU";
@@ -130,10 +191,7 @@ export default function MiniPlayer({
 
   // PiP Penceresini Başlat / Kapat
   useEffect(() => {
-    if (!('documentPictureInPicture' in window)) {
-      setIsSupported(false);
-      return;
-    }
+    if (!isSupported) return;
 
     if (isOpen && !pipWindow) {
       const openPip = async () => {
@@ -144,24 +202,40 @@ export default function MiniPlayer({
             disallowReturnToOpener: true,
           });
 
-          win.document.title = `🎛️ ${displayTitle} • ${t('miniPlayerTitle')}`;
-
-          Array.from(document.styleSheets).forEach((styleSheet) => {
-            try {
-              const cssRules = Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('');
-              const style = win.document.createElement('style');
-              style.textContent = cssRules;
-              win.document.head.appendChild(style);
-            } catch (e) {
-              if (styleSheet.href) {
-                const link = win.document.createElement('link');
-                link.rel = 'stylesheet';
-                link.type = styleSheet.type || 'text/css';
-                link.href = styleSheet.href;
-                win.document.head.appendChild(link);
+          // ana sayfanın stillerini PiP penceresine kopyala (eski kopyaları silip yeniden)
+          const copyStyles = () => {
+            win.document.querySelectorAll('[data-pip-copied]').forEach((node) => node.remove());
+            const nodes = [];
+            Array.from(document.styleSheets).forEach((styleSheet) => {
+              try {
+                const style = win.document.createElement('style');
+                style.textContent = Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('');
+                nodes.push(style);
+              } catch {
+                // başka kaynaktan gelen (cross-origin) stil dosyası: kurallar okunamaz, link olarak ekle
+                if (styleSheet.href) {
+                  const link = win.document.createElement('link');
+                  link.rel = 'stylesheet';
+                  link.href = styleSheet.href;
+                  nodes.push(link);
+                }
               }
-            }
+            });
+            nodes.forEach((node) => node.setAttribute('data-pip-copied', ''));
+            win.document.head.prepend(...nodes);
+          };
+          copyStyles();
+
+          // geliştirme sırasında (HMR) yeni eklenen stiller de açık pencereye yansısın
+          let syncFrame = null;
+          const styleObserver = new MutationObserver(() => {
+            if (syncFrame) return;
+            syncFrame = requestAnimationFrame(() => {
+              syncFrame = null;
+              copyStyles();
+            });
           });
+          styleObserver.observe(document.head, { childList: true, subtree: true, characterData: true });
 
           const customStyle = win.document.createElement('style');
           customStyle.textContent = `
@@ -171,10 +245,7 @@ export default function MiniPlayer({
               background-color: transparent; color: #ffffff;
               font-family: 'Circular Std', 'Poppins', 'Plus Jakarta Sans', system-ui, sans-serif;
               overflow: hidden; user-select: none;
-              -webkit-app-region: drag;
             }
-            button, input, a, .no-drag { -webkit-app-region: no-drag; }
-            * { box-sizing: border-box; }
           `;
           win.document.head.appendChild(customStyle);
 
@@ -185,47 +256,31 @@ export default function MiniPlayer({
           updateBounds();
 
           win.addEventListener('pagehide', () => {
+            styleObserver.disconnect();
+            if (syncFrame) cancelAnimationFrame(syncFrame);
             setPipWindow(null);
-            if (onClose) onClose();
+            onClose?.();
           });
           setPipWindow(win);
         } catch (err) {
           console.error("Document Picture-in-Picture hatası:", err);
           setPipWindow(null);
-          if (onClose) onClose();
+          onClose?.();
         }
       };
       openPip();
     } else if (!isOpen && pipWindow) {
-      try { pipWindow.close(); } catch (e) {}
-      setPipWindow(null);
+      // state'i pencerenin 'pagehide' olayı sıfırlar
+      pipWindow.close();
     }
   }, [isOpen]);
 
+  // pencere değişince ya da bileşen kapanınca eski PiP penceresini kapat
   useEffect(() => {
     return () => {
-      if (pipWindow) {
-        try { pipWindow.close(); } catch (e) {}
-      }
+      try { pipWindow?.close(); } catch { /* zaten kapanmış */ }
     };
   }, [pipWindow]);
-
-  // Renk ve Parlaklık (Luminance) Hesabı
-  const palette = nowPlaying?.palette;
-  const safeRgb = palette?.rgb || (Array.isArray(rgb) ? rgb : [229, 9, 20]);
-  const safeAvgRgb = palette?.avg_rgb || (Array.isArray(avgRgb) ? avgRgb : safeRgb);
-
-  // Parlaklık testi (ITU-R BT.601 YIQ)
-  const brightness = (safeRgb[0] * 299 + safeRgb[1] * 587 + safeRgb[2] * 114) / 1000;
-  const isLight = brightness > 145;
-
-  const bgRgb = isLight ? safeRgb : [Math.floor(safeRgb[0] * 0.55), Math.floor(safeRgb[1] * 0.55), Math.floor(safeRgb[2] * 0.55)];
-  const bgAvgRgb = isLight ? safeAvgRgb : [Math.floor(safeAvgRgb[0] * 0.35), Math.floor(safeAvgRgb[1] * 0.35), Math.floor(safeAvgRgb[2] * 0.35)];
-
-  const textColor = isLight ? '#000000' : '#ffffff';
-  const navBtnColor = isLight ? 'text-zinc-900 hover:text-black hover:bg-black/10' : 'text-zinc-300 hover:text-white hover:bg-white/10';
-  const playBtnStyle = isLight ? 'bg-zinc-900 text-white hover:bg-black shadow-md' : 'bg-white text-black hover:bg-zinc-200 shadow-md';
-  const iconFillColor = isLight ? '#ffffff' : '#000000';
 
   useEffect(() => {
     if (pipWindow?.document) {
@@ -233,239 +288,154 @@ export default function MiniPlayer({
     }
   }, [displayTitle, pipWindow]);
 
-  const containerBgStyle = {
-    background: isLight
-      ? `linear-gradient(180deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, 0.88) 0%, rgba(${bgAvgRgb[0]}, ${bgAvgRgb[1]}, ${bgAvgRgb[2]}, 0.85) 100%)`
-      : `linear-gradient(180deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, 0.82) 0%, rgba(${bgAvgRgb[0]}, ${bgAvgRgb[1]}, ${bgAvgRgb[2]}, 0.75) 100%)`,
-    backdropFilter: 'blur(24px)',
-    WebkitBackdropFilter: 'blur(24px)'
+  // Spotify tarzı renk: kapağın baskın renginin koyu ve doygun hali, tek renk zemin
+  const bg = toSpotifyBg(nowPlaying?.palette?.rgb || rgb);
+  const containerBgStyle = { backgroundColor: `rgb(${bg.join(', ')})`, transition: 'background-color 0.6s ease' };
+  // sanatçı adı: zemin renginin açık tonu (Spotify'daki gibi, beyazla %65 karışım)
+  const artistColor = `rgb(${bg.map((v) => Math.round(v + (255 - v) * 0.65)).join(', ')})`;
+
+  const { width, height } = windowDimensions;
+  let phase = 1;
+  if (height < 110) phase = 3;
+  else if (height < 140) phase = 2;
+
+  const hoverHandlers = {
+    onMouseEnter: () => setIsHovering(true),
+    onMouseLeave: () => setIsHovering(false)
   };
 
-  const ambientLayer = coverArtwork && (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      <img
-        src={coverArtwork}
-        alt=""
-        className="w-full h-full object-cover scale-150 transition-all duration-1000 transform-gpu"
-        style={{
-          filter: 'blur(45px) saturate(240%) brightness(0.65)',
-          opacity: isPlaying ? 0.8 : 0.5
-        }}
-      />
-      <div
-        className="absolute inset-0 transition-colors duration-1000"
-        style={{
-          background: `linear-gradient(180deg, rgba(${safeRgb[0]},${safeRgb[1]},${safeRgb[2]},0.35) 0%, rgba(${safeAvgRgb[0]},${safeAvgRgb[1]},${safeAvgRgb[2]},0.5) 100%)`,
-          backdropFilter: 'blur(20px)'
-        }}
-      />
+  const coverImage = (emojiSize) => (
+    coverArtwork ? (
+      <img src={coverArtwork} alt={displayTitle} className="w-full h-full object-cover" />
+    ) : (
+      <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: '#282828', fontSize: emojiSize }}>📻</div>
+    )
+  );
+
+  const navButton = (onClick, label, Icon, iconSize) => onClick && (
+    <button
+      onClick={onClick}
+      className="shrink-0 flex items-center justify-center rounded-full cursor-pointer transition-transform hover:scale-110 active:scale-90"
+      style={{ color: '#ffffff', padding: 4 }}
+      title={label}
+    >
+      <Icon size={iconSize} />
+    </button>
+  );
+
+  const playButton = (size) => (
+    <button
+      onClick={togglePlay}
+      className="shrink-0 rounded-full cursor-pointer transition-transform hover:scale-105 active:scale-95"
+      style={{ width: size, height: size }}
+      title={isPlaying ? t('miniPause') : t('miniPlay')}
+    >
+      <PlayPauseGlyph isPlaying={isPlaying} />
+    </button>
+  );
+
+  const artistLine = (fontSize) => (
+    <div className="truncate" style={{ fontSize, fontWeight: 500, color: artistColor, marginTop: 2 }}>
+      {displayArtist}
     </div>
   );
 
-  const height = windowDimensions.height;
-  let phase = 1;
-  if (height < 110) phase = 3;
-  else if (height < 170) phase = 2;
-  else phase = 1;
-
-  let playerContent = null;
+  let playerContent;
 
   if (phase === 3) {
-    const subTextColor = isLight ? 'text-zinc-900 font-medium' : 'text-[#1db954] font-normal';
     playerContent = (
-      <div className="group w-full h-full flex items-center justify-between px-3 py-1.5 select-none relative overflow-hidden font-sans box-border" style={containerBgStyle}>
-        {ambientLayer}
-        <div className="w-10 h-10 rounded-lg overflow-hidden bg-zinc-800 shrink-0 relative z-10 shadow-sm">
-          {coverArtwork ? (
-            <img src={coverArtwork} alt={displayTitle} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-xs">📻</div>
-          )}
+      <div className="w-full h-full flex items-center gap-3 px-3 overflow-hidden font-sans" style={containerBgStyle} {...hoverHandlers}>
+        <div className="w-10 h-10 rounded overflow-hidden shrink-0 shadow-md">
+          {coverImage(14)}
         </div>
 
-        <div className="min-w-0 flex-1 px-3 z-10">
-          <ScrollableTitle title={displayTitle} artist={displayArtist} fontSize="12px" fontWeight={400} color={textColor} />
-          <div className={`flex items-center gap-1.5 text-[10.5px] tracking-wide truncate mt-0.5 ${subTextColor}`}>
-            <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.5A2.25 2.25 0 0 0 2.25 9.75v4.5A2.25 2.25 0 0 0 4.5 16.5h1.94l4.5 4.5c.944.945 2.56.276 2.56-1.06V4.06ZM18.584 5.106a.75.75 0 0 1 1.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 0 1-1.06-1.06 8.25 8.25 0 0 0 0-11.668.75.75 0 0 1 0-1.06Z" />
-            </svg>
-            <span className="truncate">{currentTrack?.title || "RadioTEDU"}</span>
-          </div>
+        <div className="min-w-0 flex-1">
+          <ScrollableTitle title={displayTitle} fontSize="13px" lineHeight={1.25} active={isHovering} />
+          {artistLine(11)}
         </div>
 
-        <div className="flex items-center gap-1.5 z-10 shrink-0">
-          {prevStation && (
-            <button
-              onClick={prevStation}
-              className={`no-drag p-1 rounded-full transition-all active:scale-90 cursor-pointer ${navBtnColor}`}
-              title={t('prevStation')}
-            >
-              <PrevIcon className="w-3.5 h-3.5" />
-            </button>
+        {/* pencere genişledikçe sırayla: önce sonraki, sonra önceki, en son Spotify logosu görünür */}
+        <div className="flex items-center shrink-0">
+          {width >= 400 && (
+            <div className="mr-2">
+              <SpotifyLink url={spotifyUrl} title={t('listenOnSpotify')} size={18} />
+            </div>
           )}
-
-          <button
-            onClick={togglePlay}
-            className={`no-drag w-8 h-8 shrink-0 aspect-square rounded-full flex items-center justify-center font-bold transition-transform cursor-pointer hover:scale-105 active:scale-95 ${playBtnStyle}`}
-            title={isPlaying ? t('miniPause') : t('miniPlay')}
-          >
-            {isPlaying ? (
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill={iconFillColor}><rect x="6" y="5" width="4" height="14" rx="1.5" /><rect x="14" y="5" width="4" height="14" rx="1.5" /></svg>
-            ) : (
-              <svg className="w-4 h-4 ml-0.5" viewBox="0 0 24 24" fill={iconFillColor}><path d="M8 5v14l11-7z" /></svg>
-            )}
-          </button>
-
-          {nextStation && (
-            <button
-              onClick={nextStation}
-              className={`no-drag p-1 shrink-0 aspect-square rounded-full transition-all active:scale-90 cursor-pointer ${navBtnColor}`}
-              title={t('nextStation')}
-            >
-              <NextIcon className="w-3.5 h-3.5" />
-            </button>
-          )}
-
-          <SpotifyLink url={spotifyUrl} title={t('listenOnSpotify')} className="w-4 h-4 ml-0.5" isLight={isLight} />
+          {width >= 340 && navButton(prevStation, t('prevStation'), PrevIcon, 24)}
+          {playButton(32)}
+          {width >= 280 && navButton(nextStation, t('nextStation'), NextIcon, 24)}
         </div>
       </div>
     );
   } else if (phase === 2) {
-    const subTextColor = isLight ? 'text-zinc-900 font-semibold' : 'text-[#1db954] font-medium';
     playerContent = (
-      <div className="group w-full h-full flex flex-col justify-center gap-2 p-3 select-none relative overflow-hidden font-sans box-border" style={containerBgStyle}>
-        {ambientLayer}
-        <div className="flex items-center gap-3 z-10 min-w-0 px-0.5">
-          <div className="w-14 h-14 rounded-xl overflow-hidden bg-zinc-800 shrink-0 relative shadow-md">
-            {coverArtwork ? (
-              <img src={coverArtwork} alt={displayTitle} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-lg">📻</div>
-            )}
+      <div className="w-full h-full flex flex-col justify-center gap-2 px-3 overflow-hidden font-sans" style={containerBgStyle} {...hoverHandlers}>
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-12 h-12 rounded overflow-hidden shrink-0 shadow-md">
+            {coverImage(18)}
           </div>
-
           <div className="min-w-0 flex-1">
-            <ScrollableTitle title={displayTitle} artist={displayArtist} fontSize="13.5px" fontWeight={500} color={textColor} />
-            <div className="flex items-center justify-between gap-1.5 text-[11px] tracking-wide truncate mt-0.5">
-              <div className={`flex items-center gap-1.5 min-w-0 truncate ${subTextColor}`}>
-                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.5A2.25 2.25 0 0 0 2.25 9.75v4.5A2.25 2.25 0 0 0 4.5 16.5h1.94l4.5 4.5c.944.945 2.56.276 2.56-1.06V4.06ZM18.584 5.106a.75.75 0 0 1 1.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 0 1-1.06-1.06 8.25 8.25 0 0 0 0-11.668.75.75 0 0 1 0-1.06Z" />
-                </svg>
-                <span className="truncate">{currentTrack?.title || "RadioTEDU"}</span>
-              </div>
-              <SpotifyLink url={spotifyUrl} title={t('listenOnSpotify')} className="w-4 h-4" isLight={isLight} />
-            </div>
+            <ScrollableTitle title={displayTitle} fontSize="14px" lineHeight={1.25} active={isHovering} />
+            {artistLine(12)}
           </div>
+          <SpotifyLink url={spotifyUrl} title={t('listenOnSpotify')} size={20} />
         </div>
 
-        <div className="flex items-center justify-center gap-4 z-10 pt-0.5">
-          {prevStation && (
-            <button
-              onClick={prevStation}
-              className={`no-drag p-1 shrink-0 aspect-square rounded-full transition-all active:scale-90 cursor-pointer ${navBtnColor}`}
-              title={t('prevStation')}
-            >
-              <PrevIcon className="w-4.5 h-4.5" />
-            </button>
-          )}
-
-          <button
-            onClick={togglePlay}
-            className={`no-drag w-9 h-9 shrink-0 aspect-square rounded-full flex items-center justify-center font-bold transition-transform cursor-pointer hover:scale-105 active:scale-95 ${playBtnStyle}`}
-            title={isPlaying ? t('miniPause') : t('miniPlay')}
-          >
-            {isPlaying ? (
-              <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill={iconFillColor}><rect x="6" y="5" width="4" height="14" rx="1.5" /><rect x="14" y="5" width="4" height="14" rx="1.5" /></svg>
-            ) : (
-              <svg className="w-4.5 h-4.5 ml-0.5" viewBox="0 0 24 24" fill={iconFillColor}><path d="M8 5v14l11-7z" /></svg>
-            )}
-          </button>
-
-          {nextStation && (
-            <button
-              onClick={nextStation}
-              className={`no-drag p-1 shrink-0 aspect-square rounded-full transition-all active:scale-90 cursor-pointer ${navBtnColor}`}
-              title={t('nextStation')}
-            >
-              <NextIcon className="w-4.5 h-4.5" />
-            </button>
-          )}
+        <div className="flex items-center justify-center gap-5">
+          {navButton(prevStation, t('prevStation'), PrevIcon, 20)}
+          {playButton(36)}
+          {navButton(nextStation, t('nextStation'), NextIcon, 20)}
         </div>
       </div>
     );
   } else {
-    const subTextColor = isLight ? 'text-zinc-900 font-bold' : 'text-[#1db954] font-semibold';
     playerContent = (
-      <div className="group w-full h-full flex flex-col justify-between p-3 select-none relative overflow-hidden font-sans box-border" style={containerBgStyle}>
-        {ambientLayer}
-        <div className="flex-1 min-h-0 w-full flex items-center justify-center relative my-1 z-10 p-1">
+      <div className="w-full h-full flex flex-col px-4 pt-4 pb-3 overflow-hidden font-sans" style={containerBgStyle} {...hoverHandlers}>
+        {/* kapak: her pencere boyutunda kare, genişlik ve yüksekliğin küçüğü kadar */}
+        <div className="flex-1 min-h-0 w-full flex items-center justify-center relative" style={{ containerType: 'size' }}>
           <div
-            className="group/cover rounded-2xl overflow-hidden relative flex items-center justify-center transition-all duration-300 h-full max-h-full aspect-square"
+            className="rounded-lg overflow-hidden relative"
             style={{
-              boxShadow: isPlaying ? '0 8px 20px rgba(0, 0, 0, 0.45)' : '0 4px 12px rgba(0, 0, 0, 0.35)',
-              backgroundColor: '#121216'
+              width: 'min(100cqw, 100cqh)',
+              height: 'min(100cqw, 100cqh)',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)'
             }}
           >
-            {coverArtwork ? (
-              <img src={coverArtwork} alt={displayTitle} className="w-full h-full object-cover transition-all duration-700 group-hover/cover:scale-105" />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900 text-3xl">📻</div>
-            )}
-
+            {coverImage(40)}
+            {/* fare gelince kapağın üstüne zemin renginde %80 opak katman (Spotify gibi) */}
             <div
-              className="absolute inset-0 bg-black/50 flex items-center justify-center gap-3 opacity-0 group-hover/cover:opacity-100 transition-all duration-300 z-20"
+              className="absolute inset-0"
               style={{
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)'
+                backgroundColor: `rgba(${bg.join(', ')}, 0.8)`,
+                opacity: isHovering ? 1 : 0,
+                transition: 'opacity 0.25s ease'
               }}
-            >
-              {prevStation && (
-                <button
-                  onClick={prevStation}
-                  className="no-drag p-1.5 shrink-0 aspect-square rounded-full text-white/80 hover:text-white hover:bg-white/20 transition-all active:scale-90 cursor-pointer"
-                  title={t('prevStation')}
-                >
-                  <PrevIcon className="w-4.5 h-4.5" />
-                </button>
-              )}
+            />
+          </div>
 
-              <button
-                onClick={togglePlay}
-                className="no-drag w-11 h-11 shrink-0 aspect-square rounded-full bg-white text-black flex items-center justify-center font-bold shadow-2xl hover:scale-110 active:scale-95 transition-transform cursor-pointer"
-                title={isPlaying ? t('miniPause') : t('miniPlay')}
-              >
-                {isPlaying ? (
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#000000"><rect x="6" y="5" width="4" height="14" rx="1.5" /><rect x="14" y="5" width="4" height="14" rx="1.5" /></svg>
-                ) : (
-                  <svg className="w-5 h-5 ml-0.5" viewBox="0 0 24 24" fill="#000000"><path d="M8 5v14l11-7z" /></svg>
-                )}
-              </button>
-
-              {nextStation && (
-                <button
-                  onClick={nextStation}
-                  className="no-drag p-1.5 shrink-0 aspect-square rounded-full text-white/80 hover:text-white hover:bg-white/20 transition-all active:scale-90 cursor-pointer"
-                  title={t('nextStation')}
-                >
-                  <NextIcon className="w-4.5 h-4.5" />
-                </button>
-              )}
-            </div>
+          {/* kontroller: pencere genişliğinde, kapağın ortasında */}
+          <div
+            className="absolute inset-0 flex items-center justify-center gap-2"
+            style={{
+              opacity: isHovering ? 1 : 0,
+              pointerEvents: isHovering ? 'auto' : 'none',
+              transition: 'opacity 0.25s ease'
+            }}
+          >
+            {navButton(prevStation, t('prevStation'), PrevIcon, 28)}
+            {playButton(height > 300 ? 52 : 44)}
+            {navButton(nextStation, t('nextStation'), NextIcon, 28)}
           </div>
         </div>
 
-        <div className="z-10 px-2 pb-2.5 pt-1 shrink-0">
-          <div className="min-w-0 w-full">
-            <ScrollableTitle title={displayTitle} artist={displayArtist} fontSize={height > 300 ? "16px" : "14.5px"} fontWeight={height > 300 ? 700 : 600} color={textColor} />
-            <div className="flex items-center justify-between gap-1.5 text-xs tracking-wide mt-1">
-              <div className={`flex items-center gap-1.5 min-w-0 truncate ${subTextColor}`}>
-                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.5A2.25 2.25 0 0 0 2.25 9.75v4.5A2.25 2.25 0 0 0 4.5 16.5h1.94l4.5 4.5c.944.945 2.56.276 2.56-1.06V4.06ZM18.584 5.106a.75.75 0 0 1 1.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 0 1-1.06-1.06 8.25 8.25 0 0 0 0-11.668.75.75 0 0 1 0-1.06Z" />
-                </svg>
-                <span className="truncate">{currentTrack?.title || "RadioTEDU"}</span>
-              </div>
-              <SpotifyLink url={spotifyUrl} title={t('listenOnSpotify')} className="w-4 h-4" isLight={isLight} />
-            </div>
+        {/* alt bilgi: şarkı adı, altında sanatçı, sağda dikeyde ortalı Spotify */}
+        <div className="flex items-center justify-between gap-3 pt-5 shrink-0">
+          <div className="min-w-0 flex-1">
+            <ScrollableTitle title={displayTitle} fontSize={height > 300 ? '20px' : '17px'} lineHeight={1.2} />
+            {artistLine(height > 300 ? 14 : 13)}
+          </div>
+          <div style={{ marginRight: 6 }}>
+            <SpotifyLink url={spotifyUrl} title={t('listenOnSpotify')} size={24} />
           </div>
         </div>
       </div>
