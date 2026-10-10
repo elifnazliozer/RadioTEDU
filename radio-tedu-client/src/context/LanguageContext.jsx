@@ -113,7 +113,9 @@ export const translations = {
     lyricsLoading: "Şarkı sözleri yükleniyor...",
     lyricsNotFound: "Bu parça için söz bulunamadı veya enstrümantal yayın.",
     lyricsButton: "Şarkı Sözleri (Lyrics)",
-    closeLyrics: "Sözleri Kapat"
+    closeLyrics: "Sözleri Kapat",
+    miniPlayerButton: "Mini Oyuncu (Mini Player)",
+    miniPlayerTitle: "RadioTEDU Mini Player"
   },
   en: {
     // header
@@ -226,7 +228,9 @@ export const translations = {
     lyricsLoading: "Loading lyrics...",
     lyricsNotFound: "No lyrics found for this track or instrumental broadcast.",
     lyricsButton: "Song Lyrics",
-    closeLyrics: "Close Lyrics"
+    closeLyrics: "Close Lyrics",
+    miniPlayerButton: "Mini Player (Picture-in-Picture)",
+    miniPlayerTitle: "RadioTEDU Mini Player"
   }
 };
 

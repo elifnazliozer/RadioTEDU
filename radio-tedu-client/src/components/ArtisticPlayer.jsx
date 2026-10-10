@@ -2,6 +2,7 @@ import React, { useContext, useState, useEffect, useRef } from 'react';
 import { AudioContext } from '../context/AudioContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import MiniPlayer from './MiniPlayer';
 
 // her kanal ve içeriğe özel dinamik renk paletleri
 const THEME_MAP = {
@@ -71,6 +72,7 @@ export default function ArtisticPlayer() {
     isPlaying,
     isLoading,
     togglePlay,
+    playTrack,
     volume,
     setVolume,
     isMuted,
@@ -107,6 +109,9 @@ export default function ArtisticPlayer() {
     }
     return currentTrack?.subtitle || currentTrack?.artist || t('defaultSubtitle');
   })();
+
+  // mini player (picture-in-picture) durum yönetimi
+  const [isMiniPlayerOpen, setIsMiniPlayerOpen] = useState(false);
 
   // şarkı sözleri (lyrics) durum ve ref yönetimi
   const [showLyrics, setShowLyrics] = useState(false);
@@ -458,6 +463,25 @@ export default function ArtisticPlayer() {
         {/* sağ: ses kontrolü ve stüdyo detayları */}
         <div className="flex items-center justify-end gap-3 sm:gap-4 min-w-0 justify-self-end relative">
           
+          {/* mini player (picture-in-picture) pencere ikon butonu */}
+          <button
+            onClick={() => setIsMiniPlayerOpen(!isMiniPlayerOpen)}
+            className={`p-1.5 rounded-lg text-zinc-800 hover:text-black dark:text-zinc-100 dark:hover:text-white bg-transparent border-0 transition-all duration-200 cursor-pointer flex items-center justify-center hover:scale-110 active:scale-90 drop-shadow-sm ${
+              isMiniPlayerOpen ? 'opacity-100 scale-110 text-emerald-500 dark:text-emerald-400' : 'opacity-80 hover:opacity-100'
+            }`}
+            title={t('miniPlayerButton')}
+            aria-label={t('miniPlayerButton')}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="w-5 h-5 transition-transform duration-300"
+            >
+              <path fillRule="evenodd" d="M2.25 6.75a2.25 2.25 0 0 1 2.25-2.25h15a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75Zm4.5 1.5a.75.75 0 0 0-.75.75v4.5c0 .414.336.75.75.75h6.75a.75.75 0 0 0 .75-.75V9a.75.75 0 0 0-.75-.75H6.75Z" clipRule="evenodd" />
+            </svg>
+          </button>
+
           {/* şarkı sözleri (lyrics) ikon butonu */}
           <button
             ref={lyricsBtnRef}
@@ -609,6 +633,29 @@ export default function ArtisticPlayer() {
           )}
         </div>
       )}
+
+      {/* Spotify tarzı masaüstü sürekli yüzen Mini Player (Picture-in-Picture) */}
+      <MiniPlayer
+        isOpen={isMiniPlayerOpen}
+        onClose={() => setIsMiniPlayerOpen(false)}
+        currentTrack={currentTrack}
+        nowPlaying={nowPlaying}
+        isPlaying={isPlaying}
+        isLoading={isLoading}
+        togglePlay={togglePlay}
+        playTrack={playTrack}
+        prevStation={prevStation}
+        nextStation={nextStation}
+        volume={volume}
+        setVolume={setVolume}
+        isMuted={isMuted}
+        toggleMute={toggleMute}
+        activeAccent={activeAccent}
+        activeGlow={activeGlow}
+        rgb={rgb}
+        avgRgb={avgRgb}
+        t={t}
+      />
     </footer>
   );
 }
